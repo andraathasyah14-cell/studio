@@ -1,7 +1,7 @@
 // Summarize the descriptions of provided features.
 //
 // - summarizeFeatureDescriptions - A function that summarizes feature descriptions.
-// - SummarizeFeatureDescriptionsInput - The input type for the summarizeFeatureDescriptions function.
+// - SummarizeFeatureDescriptionsInput - The input type for the summarizeFeaturedescriptions function.
 // - SummarizeFeatureDescriptionsOutput - The return type for the summarizeFeatureDescriptions function.
 
 'use server';
@@ -39,12 +39,15 @@ const prompt = ai.definePrompt({
   name: 'summarizeFeatureDescriptionsPrompt',
   input: {schema: SummarizeFeatureDescriptionsInputSchema},
   output: {schema: SummarizeFeatureDescriptionsOutputSchema},
-  prompt: `Summarize the following feature descriptions into concise, one-sentence summaries. Return the summaries in the same order as the input.
+  prompt: `You will be given a list of feature descriptions. Your task is to provide a concise, one-sentence summary for each description.
 
+You must provide a summary for each description, and the summaries must be in the same order as the input descriptions.
+
+Here are the feature descriptions:
 {{#each this}}
-Description: {{{this.description}}}
-Summary:
-{{/each}}`,
+- Feature Description: {{{this.description}}}
+{{/each}}
+`,
 });
 
 const summarizeFeatureDescriptionsFlow = ai.defineFlow(
