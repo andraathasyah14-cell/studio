@@ -1,3 +1,11 @@
+
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "jone-lee-portrait",
+      "description": "A portrait of Jone Lee.",
+      "imageUrl": "https://picsum.photos/seed/jonelee/400/400",
+      "imageHint": "man portrait"
+    }
+  ]
 }
