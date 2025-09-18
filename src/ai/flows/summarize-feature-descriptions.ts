@@ -43,7 +43,7 @@ const prompt = ai.definePrompt({
 
 You must provide a summary for each description, and the summaries must be in the same order as the input descriptions.
 
-Return the response as a JSON array of objects, where each object has a "summary" key.
+Your output must be a valid JSON array of objects, where each object has a "summary" key.
 
 Here are the feature descriptions:
 {{#each this}}
