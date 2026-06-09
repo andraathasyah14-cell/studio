@@ -43,7 +43,8 @@ const prompt = ai.definePrompt({
 
 You must provide a summary for each description, and the summaries must be in the same order as the input descriptions.
 
-Your output must be a valid JSON array of objects, where each object has a "summary" key. For example: [{"summary": "summary one"}, {"summary": "summary two"}]
+CRITICAL: You must return ONLY a JSON array of objects.
+Example output: [{"summary": "Concise summary one"}, {"summary": "Concise summary two"}]
 
 Here are the feature descriptions:
 {{#each this}}
@@ -59,7 +60,15 @@ const summarizeFeatureDescriptionsFlow = ai.defineFlow(
     outputSchema: SummarizeFeatureDescriptionsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      if (!output || !Array.isArray(output)) {
+        return input.map(item => ({ summary: item.description }));
+      }
+      return output;
+    } catch (error) {
+      console.error("AI Summarization Flow Error:", error);
+      return input.map(item => ({ summary: item.description }));
+    }
   }
 );
