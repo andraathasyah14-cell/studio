@@ -14,6 +14,16 @@ export interface Book {
   rating?: number;
 }
 
+export interface Resource {
+  title: string;
+  author: string;
+  year?: string;
+  category: string;
+  link: string;
+  type: 'paper' | 'web' | 'dataset';
+  note: string;
+}
+
 export const stats = {
   essays: 43,
   papers: 286,
@@ -73,6 +83,52 @@ export const books: Book[] = [
     status: "Selesai · Feb 2026",
     note: "Mengubah cara saya memandang model bisnis platform digital. Berpengaruh langsung pada esai tentang AI dan produktivitas.",
     rating: 5
+  }
+];
+
+export const resources: Resource[] = [
+  {
+    title: "Indonesia's Deindustrialization: A Premature Transition?",
+    author: "H. Hill & M. S. Anwar",
+    year: "2023",
+    category: "Economics",
+    link: "https://example.com/paper-hill-anwar",
+    type: 'paper',
+    note: "Analisis mendalam tentang stagnasi manufaktur di Indonesia."
+  },
+  {
+    title: "The Impact of AI on Labor Markets in Southeast Asia",
+    author: "ADB Report",
+    year: "2024",
+    category: "Technology",
+    link: "https://example.com/adb-ai-report",
+    type: 'paper',
+    note: "Data statistik mengenai pergeseran jenis pekerjaan akibat otomasi."
+  },
+  {
+    title: "Visualizing Global Inequality Patterns",
+    author: "Our World in Data",
+    category: "Sociology",
+    link: "https://ourworldindata.org/inequality",
+    type: 'web',
+    note: "Referensi data visual primer untuk esai hukum dan ketimpangan."
+  },
+  {
+    title: "Demographic Bonus or Disaster? A Longitudinal Study",
+    author: "UI Research Institute",
+    year: "2022",
+    category: "Demography",
+    link: "https://example.com/demography-study",
+    type: 'paper',
+    note: "Paper pendukung tesis tentang beban struktural tenaga kerja muda."
+  },
+  {
+    title: "Open Data Indonesia - Labour Force Statistics",
+    author: "BPS",
+    category: "Dataset",
+    link: "https://bps.go.id",
+    type: 'dataset',
+    note: "Sumber data mentah yang digunakan untuk menghitung produktivitas."
   }
 ];
 
