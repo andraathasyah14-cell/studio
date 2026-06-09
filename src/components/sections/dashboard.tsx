@@ -1,57 +1,60 @@
 'use client';
 
+import Link from "next/link";
 import { resources } from "@/lib/data";
-import { FileText, Link as LinkIcon, Download, ExternalLink, Database } from "lucide-react";
+import { FileText, Link as LinkIcon, Download, ExternalLink, Database, ArrowRight } from "lucide-react";
 
 export default function Dashboard() {
   const activityData = Array.from({ length: 30 }, () => Math.floor(Math.random() * 100));
   const max = Math.max(...activityData);
+  
+  // Ambil 3 sumber daya terbaru saja untuk pratinjau
+  const recentResources = resources.slice(0, 3);
 
   return (
     <section id="dashboard" className="py-20 px-6 border-b border-border">
       <div className="flex items-center gap-4 mb-12">
-        <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground whitespace-nowrap">Dasbor & Sumber Daya</span>
+        <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground whitespace-nowrap">Dasbor & Aktivitas</span>
         <div className="h-px w-full bg-border" />
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-border border border-border mb-12 overflow-hidden">
-        <StatCell value="7" label="Opini diterbitkan" />
-        <StatCell value="18" label="Paper ditambahkan" />
-        <StatCell value="2" label="Buku selesai" />
-        <StatCell value="5" label="Dataset digunakan" />
-        <StatCell value="3" label="Revisi tulisan" />
+        <StatCell value="43" label="Tulisan" />
+        <StatCell value="286" label="Paper" />
+        <StatCell value="21" label="Buku" />
+        <StatCell value="5" label="Dataset" />
+        <StatCell value="11" label="Revisi" />
       </div>
 
-      {/* Resource Library */}
+      {/* Recent Resources Preview */}
       <div className="mb-16">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-white mb-6">Pustaka Referensi & Paper</h3>
+        <div className="flex justify-between items-end mb-6">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-white">Referensi Terbaru</h3>
+          <Link href="/pustaka" className="text-[0.6rem] uppercase tracking-widest text-muted-foreground hover:text-white flex items-center gap-1 transition-colors">
+            Lihat Semua Pustaka <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        
         <div className="grid grid-cols-1 gap-px bg-border border border-border">
-          {resources.map((res, i) => (
-            <div key={i} className="bg-background p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group">
+          {recentResources.map((res, i) => (
+            <div key={i} className="bg-background p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <ResourceIcon type={res.type} />
                   <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{res.category} {res.year && `· ${res.year}`}</span>
                 </div>
-                <h4 className="font-display text-[0.95rem] font-medium text-white group-hover:text-primary transition-colors">
+                <h4 className="font-display text-[0.85rem] font-medium text-white group-hover:text-primary transition-colors">
                   {res.title}
                 </h4>
-                <p className="text-xs text-muted-foreground">{res.author}</p>
-                <p className="text-[0.7rem] italic text-muted-foreground/80 mt-1">{res.note}</p>
               </div>
-              
-              <div className="flex gap-2 w-full md:w-auto">
-                <a 
-                  href={res.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-border text-[0.65rem] uppercase tracking-widest text-muted-foreground hover:text-white hover:border-white transition-all"
-                >
-                  {res.type === 'paper' ? <Download className="w-3 h-3" /> : <ExternalLink className="w-3 h-3" />}
-                  {res.type === 'paper' ? 'Unduh Paper' : 'Kunjungi Web'}
-                </a>
-              </div>
+              <Link 
+                href={res.link} 
+                target="_blank" 
+                className="text-[0.6rem] uppercase tracking-widest text-muted-foreground hover:text-white border border-border px-3 py-1.5"
+              >
+                Lihat
+              </Link>
             </div>
           ))}
         </div>
@@ -59,7 +62,7 @@ export default function Dashboard() {
 
       {/* Activity Graph */}
       <div className="space-y-4">
-        <div className="h-24 flex items-end gap-1 px-4">
+        <div className="h-20 flex items-end gap-1 px-4">
           {activityData.map((v, i) => (
             <div 
               key={i} 
@@ -74,27 +77,27 @@ export default function Dashboard() {
           ))}
         </div>
         <p className="text-[0.6rem] text-muted-foreground tracking-widest text-center uppercase">
-          Aktivitas harian · 30 hari terakhir
+          Grafik Aktivitas · 30 hari terakhir
         </p>
       </div>
     </section>
   );
 }
 
-function ResourceIcon({ type }: { type: 'paper' | 'web' | 'dataset' }) {
+function ResourceIcon({ type }: { type: 'paper' | 'web' | 'dataset' | 'book' }) {
   switch (type) {
     case 'paper': return <FileText className="w-3 h-3 text-muted-foreground" />;
     case 'web': return <LinkIcon className="w-3 h-3 text-muted-foreground" />;
     case 'dataset': return <Database className="w-3 h-3 text-muted-foreground" />;
-    default: return null;
+    default: return <FileText className="w-3 h-3 text-muted-foreground" />;
   }
 }
 
 function StatCell({ value, label }: { value: string; label: string }) {
   return (
     <div className="bg-background p-6 flex flex-col justify-center text-center">
-      <span className="font-display text-4xl font-bold text-white mb-1">{value}</span>
-      <span className="text-[0.55rem] uppercase tracking-widest text-muted-foreground leading-tight">{label}</span>
+      <span className="font-display text-2xl font-bold text-white mb-1">{value}</span>
+      <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground leading-tight">{label}</span>
     </div>
   );
 }

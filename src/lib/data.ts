@@ -20,8 +20,9 @@ export interface Resource {
   year?: string;
   category: string;
   link: string;
-  type: 'paper' | 'web' | 'dataset';
+  type: 'paper' | 'web' | 'dataset' | 'book';
   note: string;
+  tags?: string[];
 }
 
 export const stats = {
@@ -91,36 +92,40 @@ export const resources: Resource[] = [
     title: "Indonesia's Deindustrialization: A Premature Transition?",
     author: "H. Hill & M. S. Anwar",
     year: "2023",
-    category: "Economics",
+    category: "Ekonomi",
     link: "https://example.com/paper-hill-anwar",
     type: 'paper',
-    note: "Analisis mendalam tentang stagnasi manufaktur di Indonesia."
+    note: "Analisis mendalam tentang stagnasi manufaktur di Indonesia.",
+    tags: ["Manufaktur", "Kebijakan Industri"]
   },
   {
     title: "The Impact of AI on Labor Markets in Southeast Asia",
     author: "ADB Report",
     year: "2024",
-    category: "Technology",
+    category: "Teknologi",
     link: "https://example.com/adb-ai-report",
     type: 'paper',
-    note: "Data statistik mengenai pergeseran jenis pekerjaan akibat otomasi."
+    note: "Data statistik mengenai pergeseran jenis pekerjaan akibat otomasi.",
+    tags: ["Otomasi", "Tenaga Kerja"]
   },
   {
     title: "Visualizing Global Inequality Patterns",
     author: "Our World in Data",
-    category: "Sociology",
+    category: "Sosiologi",
     link: "https://ourworldindata.org/inequality",
     type: 'web',
-    note: "Referensi data visual primer untuk esai hukum dan ketimpangan."
+    note: "Referensi data visual primer untuk esai hukum dan ketimpangan.",
+    tags: ["Gini Coefficient", "Distribusi Kekayaan"]
   },
   {
     title: "Demographic Bonus or Disaster? A Longitudinal Study",
     author: "UI Research Institute",
     year: "2022",
-    category: "Demography",
+    category: "Demografi",
     link: "https://example.com/demography-study",
     type: 'paper',
-    note: "Paper pendukung tesis tentang beban struktural tenaga kerja muda."
+    note: "Paper pendukung tesis tentang beban struktural tenaga kerja muda.",
+    tags: ["Generasi Muda", "Pendidikan"]
   },
   {
     title: "Open Data Indonesia - Labour Force Statistics",
@@ -128,7 +133,28 @@ export const resources: Resource[] = [
     category: "Dataset",
     link: "https://bps.go.id",
     type: 'dataset',
-    note: "Sumber data mentah yang digunakan untuk menghitung produktivitas."
+    note: "Sumber data mentah yang digunakan untuk menghitung produktivitas.",
+    tags: ["Statistik", "Publik"]
+  },
+  {
+    title: "Platform Work in Indonesia: Conditions and Constraints",
+    author: "Fairwork Indonesia",
+    year: "2023",
+    category: "Sosiologi",
+    link: "https://example.com/fairwork-report",
+    type: 'paper',
+    note: "Laporan tentang kondisi kerja pengemudi ojek online dan pekerja platform.",
+    tags: ["Gig Economy", "Hak Pekerja"]
+  },
+  {
+    title: "Institutions and Economic Performance in Indonesia",
+    author: "World Bank",
+    year: "2023",
+    category: "Ekonomi",
+    link: "https://example.com/wb-report",
+    type: 'paper',
+    note: "Evaluasi efektivitas institusi publik terhadap pertumbuhan ekonomi.",
+    tags: ["Institusi", "Governance"]
   }
 ];
 
