@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -7,7 +6,7 @@ import Footer from '@/components/layout/footer';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, Send, Trash2, Layout, Sparkles } from 'lucide-react';
+import { Save, Send, Trash2, Sparkles } from 'lucide-react';
 import SmartAssistant from '@/components/admin/smart-assistant';
 
 export default function AdminPage() {

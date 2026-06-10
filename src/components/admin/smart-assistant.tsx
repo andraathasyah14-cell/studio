@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -14,12 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   CheckCircle2, 
-  Copy, 
-  FileText, 
-  LayoutList, 
   ArrowRight,
   BrainCircuit,
-  RotateCcw
+  RotateCcw,
+  LayoutList
 } from 'lucide-react';
 
 interface SmartAssistantProps {
@@ -77,7 +74,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BrainCircuit className="w-4 h-4 text-white" />
-            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Smart Analysis Assistant</h2>
+            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Analysis Form Assistant</h2>
           </div>
           {activeTemplate && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white" onClick={handleReset}>
@@ -198,7 +195,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
                 Pindahkan Jawaban ke Editor
               </Button>
               <p className="text-[0.5rem] italic text-muted-foreground/60 leading-tight text-center px-4">
-                Tombol ini akan memformat jawaban Anda menjadi draf kasar dan menambahkannya ke posisi terakhir kursor di editor utama.
+                Tombol ini akan memformat jawaban Anda menjadi draf kasar dan menyisipkannya ke editor utama.
               </p>
           </div>
         </div>
