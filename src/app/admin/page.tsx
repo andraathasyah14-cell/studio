@@ -46,7 +46,7 @@ export default function AdminPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <FileText className="w-3.5 h-3.5" />
-                  <span className="text-[0.6rem] uppercase tracking-[0.2em]">Editor Analisis</span>
+                  <span className="text-[0.6rem] uppercase tracking-[0.2em]">Workspace Penulisan</span>
                 </div>
                 <h1 className="font-display text-xl font-bold text-white">Buat Tulisan Baru</h1>
               </div>
@@ -118,7 +118,7 @@ export default function AdminPage() {
             <div className="pt-8 border-t border-white/5 flex justify-between items-center text-[0.6rem] uppercase tracking-widest text-muted-foreground font-medium">
               <div className="flex gap-6">
                 <span>{wordCount} Kata</span>
-                <span>Drafting Mode</span>
+                <span>Draf Mode</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -128,7 +128,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Smart Thinking Quiz Assistant Sidebar (Desktop Only) */}
+        {/* Analysis Form Sidebar (Desktop Only) */}
         <aside className="w-[420px] hidden xl:block shrink-0 shadow-2xl overflow-hidden border-l border-border">
           <SmartAssistant onInsertText={handleInsertFromAssistant} />
         </aside>
@@ -143,7 +143,7 @@ export default function AdminPage() {
              </SheetTrigger>
              <SheetContent side="right" className="p-0 w-[90%] sm:w-[420px] border-l border-border bg-card">
                <SheetHeader className="p-6 border-b border-border">
-                 <SheetTitle className="text-left font-display text-[0.7rem] uppercase tracking-widest">Kuis Panduan Berpikir</SheetTitle>
+                 <SheetTitle className="text-left font-display text-[0.7rem] uppercase tracking-widest">Form Bantuan Analisis</SheetTitle>
                </SheetHeader>
                <div className="h-[calc(100vh-80px)] overflow-hidden">
                  <SmartAssistant onInsertText={handleInsertFromAssistant} />

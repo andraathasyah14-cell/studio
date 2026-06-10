@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   CheckCircle2, 
-  ArrowRight,
+  Sparkles,
   RotateCcw,
   LayoutList,
   ClipboardCheck,
-  Zap
+  FileText
 } from 'lucide-react';
 
 interface SmartAssistantProps {
@@ -47,39 +47,40 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
     setAnswers(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleInsertAll = () => {
+  const handleGenerateDraft = () => {
     if (!activeTemplate) return;
-    const text = activeTemplate.sections.map(s => {
+    
+    const draftContent = activeTemplate.sections.map(s => {
       const qText = s.questions
         .filter(q => answers[q.id]?.trim())
-        .map(q => `**${q.text}**\n${answers[q.id]}`)
+        .map(q => `> ${q.text}\n\n${answers[q.id]}`)
         .join('\n\n');
       
       if (!qText) return '';
-      return `### ${s.title}\n\n${qText}`;
+      return `## ${s.title}\n\n${qText}`;
     }).filter(Boolean).join('\n\n---\n\n');
     
-    if (text) {
-      onInsertText(text);
+    if (draftContent) {
+      onInsertText(draftContent);
     }
   };
 
   const handleReset = () => {
-    if (confirm('Bersihkan semua jawaban form?')) {
+    if (confirm('Bersihkan semua jawaban kuesioner?')) {
       setAnswers({});
     }
   };
 
   return (
     <div className="flex flex-col h-full bg-card">
-      {/* Header Panel - Quiz Header */}
+      {/* Header Panel - Analysis Selection */}
       <div className="p-6 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-white text-black rounded-sm">
               <ClipboardCheck className="w-3.5 h-3.5" />
             </div>
-            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Quiz Template</h2>
+            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Form Analisis</h2>
           </div>
           {activeTemplate && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white" onClick={handleReset}>
@@ -88,15 +89,14 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
           )}
         </div>
 
-        {/* Template Selector */}
         <div className="space-y-3">
-          <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Pilih Kerangka:</p>
+          <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Pilih Jenis Analisis:</p>
           <div className="grid grid-cols-2 gap-1.5">
             <button
               onClick={() => {setSelectedTemplateKey('none'); setAnswers({});}}
               className={`px-3 py-1.5 text-[0.6rem] uppercase tracking-wider border transition-all text-center ${selectedTemplateKey === 'none' ? 'bg-white text-black border-white' : 'border-border text-muted-foreground hover:border-gray-500'}`}
             >
-              Bebas
+              Tanpa Template
             </button>
             {Object.values(ANALYSIS_TEMPLATES).map(t => (
               <button
@@ -115,7 +115,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
             <div className="flex justify-between items-end">
               <div className="space-y-0.5">
                 <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground block">Progres Pengisian</span>
-                <span className="text-[0.55rem] text-white/50">{answeredQuestions} / {totalQuestions} Terjawab</span>
+                <span className="text-[0.55rem] text-white/50">{answeredQuestions} / {totalQuestions} Pertanyaan Dijawab</span>
               </div>
               <span className="text-xl font-display font-bold text-white leading-none">{progressPercent}%</span>
             </div>
@@ -124,15 +124,15 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         )}
       </div>
 
-      {/* Quiz Area */}
+      {/* Questions Area */}
       <div className="flex-1 overflow-y-auto">
         {!activeTemplate ? (
           <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-4 opacity-20">
             <LayoutList className="w-12 h-12" />
             <div className="space-y-2">
-              <p className="text-[0.75rem] font-bold uppercase tracking-[0.2em]">Pilih Template</p>
+              <p className="text-[0.75rem] font-bold uppercase tracking-[0.2em]">Siap Menulis?</p>
               <p className="text-[0.65rem] italic leading-relaxed max-w-[200px]">
-                Gunakan template kuis untuk memandu proses analisis Anda.
+                Gunakan Form Analisis untuk membantu memandu proses berpikir Anda secara sistematis.
               </p>
             </div>
           </div>
@@ -185,19 +185,19 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         )}
       </div>
 
-      {/* Footer Tools */}
+      {/* Generate Button */}
       {activeTemplate && (
         <div className="p-6 border-t border-border bg-black/40 backdrop-blur-md">
           <Button
             className="w-full text-[0.65rem] uppercase tracking-[0.2em] h-12 rounded-none bg-white text-black hover:bg-silver transition-all shadow-xl group"
-            onClick={handleInsertAll}
+            onClick={handleGenerateDraft}
             disabled={answeredQuestions === 0}
           >
-            Pindahkan ke Editor
-            <Zap className="w-3.5 h-3.5 ml-2 group-hover:fill-current transition-all" />
+            Hasilkan Draf Analisis
+            <Sparkles className="w-3.5 h-3.5 ml-2 group-hover:fill-current transition-all" />
           </Button>
           <p className="mt-4 text-[0.55rem] italic text-muted-foreground/50 text-center leading-relaxed">
-            Klik untuk menyusun jawaban menjadi draf di editor utama.
+            Klik untuk menyusun jawaban kuesioner menjadi draf artikel otomatis.
           </p>
         </div>
       )}
