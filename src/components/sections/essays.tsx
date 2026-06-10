@@ -1,5 +1,5 @@
 import { essays } from "@/lib/data";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 export default function Essays() {
   return (
@@ -11,9 +11,9 @@ export default function Essays() {
 
       <div className="divide-y divide-border">
         {essays.map((essay, i) => (
-          <div key={i} className="group py-8 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6 cursor-pointer">
+          <div key={i} className="group py-8 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="md:col-span-3 space-y-2">
-              <h3 className="text-xl font-medium text-muted-foreground group-hover:text-white transition-colors">
+              <h3 className="text-xl font-medium text-muted-foreground group-hover:text-white transition-colors cursor-pointer">
                 {essay.title}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">
@@ -25,9 +25,13 @@ export default function Essays() {
               <span className="text-[0.7rem] text-muted-foreground tracking-wider">{essay.date}</span>
               <div className="flex flex-wrap gap-1 md:justify-end">
                 {essay.tags.map(tag => (
-                  <span key={tag} className="text-[0.6rem] uppercase tracking-tighter border border-border px-1.5 py-0.5 text-muted-foreground">
+                  <Link 
+                    key={tag} 
+                    href={`/topik/${encodeURIComponent(tag)}`}
+                    className="text-[0.6rem] uppercase tracking-tighter border border-border px-1.5 py-0.5 text-muted-foreground hover:border-white hover:text-white transition-colors"
+                  >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
               <ConfidenceBadge confidence={essay.confidence} />

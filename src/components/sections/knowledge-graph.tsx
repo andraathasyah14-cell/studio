@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import Link from "next/link";
 
 const nodes = [
   { id: 0, label: 'Bonus Demografi', x: 50, y: 45 },
@@ -49,18 +50,22 @@ export default function KnowledgeGraph() {
         </svg>
 
         {nodes.map(node => (
-          <div
+          <Link
             key={node.id}
-            className="absolute group -translate-x-1/2 -translate-y-1/2 cursor-help"
+            href={`/topik/${encodeURIComponent(node.label)}`}
+            className="absolute group -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
             style={{ left: `${node.x}%`, top: `${node.y}%` }}
           >
-            <div className="w-2 h-2 rounded-full bg-muted-foreground group-hover:bg-white group-hover:scale-150 transition-all duration-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground group-hover:bg-white group-hover:scale-150 transition-all duration-300" />
             <span className="absolute top-4 left-1/2 -translate-x-1/2 whitespace-nowrap font-display text-[0.6rem] text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity">
               {node.label}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
+      <p className="text-[0.6rem] text-muted-foreground text-center mt-6 uppercase tracking-widest italic">
+        Klik titik pada graf untuk mengeksplorasi topik terkait
+      </p>
     </section>
   );
 }

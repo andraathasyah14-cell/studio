@@ -1,5 +1,6 @@
 import { books } from "@/lib/data";
 import { Star } from "lucide-react";
+import Link from "next/link";
 
 export default function ReadingLog() {
   return (
@@ -25,6 +26,18 @@ export default function ReadingLog() {
             <p className="font-serif text-[0.85rem] italic text-muted-foreground leading-relaxed border-t border-border pt-4 mt-auto">
               "{book.note}"
             </p>
+
+            <div className="flex flex-wrap gap-1 mt-2">
+              {book.tags.map(tag => (
+                <Link 
+                  key={tag} 
+                  href={`/topik/${encodeURIComponent(tag)}`}
+                  className="text-[0.55rem] uppercase tracking-tighter border border-border px-1 py-0.5 text-muted-foreground/60 hover:text-white hover:border-white transition-colors"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
 
             {book.rating && (
               <div className="flex gap-0.5 mt-2">

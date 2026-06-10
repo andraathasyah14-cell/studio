@@ -12,6 +12,7 @@ export interface Book {
   status: string;
   note: string;
   rating?: number;
+  tags: string[];
 }
 
 export interface Resource {
@@ -38,28 +39,28 @@ export const essays: Essay[] = [
     title: "Mengapa Bonus Demografi Bisa Menjadi Bencana",
     summary: "Jika infrastruktur pendidikan dan lapangan kerja tidak siap, window of opportunity berubah menjadi beban struktural yang sulit diurai.",
     date: "12 Mei 2026",
-    tags: ["Demografi", "Ekonomi"],
+    tags: ["Demografi", "Ekonomi", "Pendidikan"],
     confidence: 65
   },
   {
     title: "Hukum dan Ketimpangan: Apakah Sistem Peradilan Kita Netral?",
     summary: "Analisis pola putusan pengadilan dari 2018–2024 menunjukkan disparitas yang konsisten berdasarkan latar belakang ekonomi terdakwa.",
     date: "2 Apr 2026",
-    tags: ["Hukum", "Sosiologi"],
+    tags: ["Hukum", "Sosiologi", "Ketimpangan"],
     confidence: 80
   },
   {
     title: "Middle Income Trap: Indonesia di Persimpangan",
     summary: "Kombinasi deindustrialisasi prematur, rendahnya nilai tambah ekspor, dan produktivitas tenaga kerja yang stagnan menempatkan Indonesia pada skenario yang familiar secara historis.",
     date: "15 Mar 2026",
-    tags: ["Ekonomi"],
+    tags: ["Ekonomi", "Industrialisasi", "Produktivitas"],
     confidence: 70
   },
   {
     title: "Apakah AI Benar-benar Meningkatkan Produktivitas?",
     summary: "Bukti empiris dari studi 2022–2024 lebih ambigu dari narasi publik. Keuntungan produktivitas sangat terkonsentrasi pada jenis pekerjaan dan tingkat keahlian tertentu.",
     date: "28 Feb 2026",
-    tags: ["Teknologi", "Ekonomi"],
+    tags: ["Teknologi", "Ekonomi", "AI & Pekerjaan", "Produktivitas"],
     confidence: 55
   }
 ];
@@ -69,21 +70,24 @@ export const books: Book[] = [
     title: "The Origins of Political Order",
     author: "Francis Fukuyama",
     status: "Sedang Dibaca",
-    note: "Memberikan kerangka historis yang berguna untuk membandingkan pembangunan institusi Indonesia dengan negara lain."
+    note: "Memberikan kerangka historis yang berguna untuk membandingkan pembangunan institusi Indonesia dengan negara lain.",
+    tags: ["Politik", "Sejarah", "Hukum"]
   },
   {
     title: "Why Nations Fail",
     author: "Acemoglu & Robinson",
     status: "Selesai · Mar 2026",
     note: "Argumen institusi inklusif vs. ekstraktif terasa kuat, meski terlalu menyederhanakan peran faktor geografis dan budaya.",
-    rating: 4
+    rating: 4,
+    tags: ["Ekonomi", "Politik", "Institusi"]
   },
   {
     title: "The Age of Surveillance Capitalism",
     author: "Shoshana Zuboff",
     status: "Selesai · Feb 2026",
     note: "Mengubah cara saya memandang model bisnis platform digital. Berpengaruh langsung pada esai tentang AI dan produktivitas.",
-    rating: 5
+    rating: 5,
+    tags: ["Teknologi", "Sosiologi", "AI & Pekerjaan"]
   }
 ];
 
@@ -96,7 +100,7 @@ export const resources: Resource[] = [
     link: "https://example.com/paper-hill-anwar",
     type: 'paper',
     note: "Analisis mendalam tentang stagnasi manufaktur di Indonesia.",
-    tags: ["Manufaktur", "Kebijakan Industri"]
+    tags: ["Manufaktur", "Industrialisasi", "Ekonomi"]
   },
   {
     title: "The Impact of AI on Labor Markets in Southeast Asia",
@@ -106,7 +110,7 @@ export const resources: Resource[] = [
     link: "https://example.com/adb-ai-report",
     type: 'paper',
     note: "Data statistik mengenai pergeseran jenis pekerjaan akibat otomasi.",
-    tags: ["Otomasi", "Tenaga Kerja"]
+    tags: ["Otomasi", "AI & Pekerjaan", "Ekonomi"]
   },
   {
     title: "Visualizing Global Inequality Patterns",
@@ -115,7 +119,7 @@ export const resources: Resource[] = [
     link: "https://ourworldindata.org/inequality",
     type: 'web',
     note: "Referensi data visual primer untuk esai hukum dan ketimpangan.",
-    tags: ["Gini Coefficient", "Distribusi Kekayaan"]
+    tags: ["Ketimpangan", "Sosiologi"]
   },
   {
     title: "Demographic Bonus or Disaster? A Longitudinal Study",
@@ -125,7 +129,7 @@ export const resources: Resource[] = [
     link: "https://example.com/demography-study",
     type: 'paper',
     note: "Paper pendukung tesis tentang beban struktural tenaga kerja muda.",
-    tags: ["Generasi Muda", "Pendidikan"]
+    tags: ["Bonus Demografi", "Pendidikan", "Demografi"]
   },
   {
     title: "Open Data Indonesia - Labour Force Statistics",
@@ -134,27 +138,7 @@ export const resources: Resource[] = [
     link: "https://bps.go.id",
     type: 'dataset',
     note: "Sumber data mentah yang digunakan untuk menghitung produktivitas.",
-    tags: ["Statistik", "Publik"]
-  },
-  {
-    title: "Platform Work in Indonesia: Conditions and Constraints",
-    author: "Fairwork Indonesia",
-    year: "2023",
-    category: "Sosiologi",
-    link: "https://example.com/fairwork-report",
-    type: 'paper',
-    note: "Laporan tentang kondisi kerja pengemudi ojek online dan pekerja platform.",
-    tags: ["Gig Economy", "Hak Pekerja"]
-  },
-  {
-    title: "Institutions and Economic Performance in Indonesia",
-    author: "World Bank",
-    year: "2023",
-    category: "Ekonomi",
-    link: "https://example.com/wb-report",
-    type: 'paper',
-    note: "Evaluasi efektivitas institusi publik terhadap pertumbuhan ekonomi.",
-    tags: ["Institusi", "Governance"]
+    tags: ["Produktivitas", "Statistik", "Ekonomi"]
   }
 ];
 
