@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Trash2, FileText, Link as LinkIcon, Tag, Sparkles } from 'lucide-react';
 import SmartAssistant from '@/components/admin/smart-assistant';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 export default function AdminPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [paperLink, setPaperLink] = useState('');
   const [tags, setTags] = useState('');
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   const handleSaveDraft = () => {
     alert('Draf berhasil disimpan secara lokal.');
@@ -24,6 +26,8 @@ export default function AdminPage() {
       const separator = prev ? '\n\n---\n\n' : '';
       return prev + separator + text;
     });
+    // Optional: close sheet on mobile after inserting
+    setIsAssistantOpen(false);
   };
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
@@ -35,7 +39,7 @@ export default function AdminPage() {
       <main className="flex-1 flex h-[calc(100vh-56px)] overflow-hidden">
         {/* Main Editor Section (Left) */}
         <div className="flex-1 overflow-y-auto bg-[#0A0A0A]">
-          <div className="max-w-[800px] mx-auto px-8 py-12 lg:px-16 lg:py-20 space-y-16">
+          <div className="max-w-[800px] mx-auto px-6 py-12 lg:px-16 lg:py-20 space-y-16">
             
             {/* Editor Toolbar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-white/5 pb-10">
@@ -124,16 +128,28 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Smart Thinking Quiz Assistant Sidebar (Right) */}
-        <aside className="w-[420px] hidden xl:block shrink-0 shadow-2xl">
+        {/* Smart Thinking Quiz Assistant Sidebar (Desktop Only) */}
+        <aside className="w-[420px] hidden xl:block shrink-0 shadow-2xl overflow-hidden border-l border-border">
           <SmartAssistant onInsertText={handleInsertFromAssistant} />
         </aside>
 
-        {/* Floating Toggle for smaller screens */}
+        {/* Floating Toggle for Mobile/Tablet */}
         <div className="xl:hidden fixed bottom-6 right-6">
-           <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver transition-transform hover:scale-110 active:scale-95">
-             <Sparkles className="w-6 h-6" />
-           </Button>
+           <Sheet open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
+             <SheetTrigger asChild>
+               <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver transition-transform hover:scale-110 active:scale-95">
+                 <Sparkles className="w-6 h-6" />
+               </Button>
+             </SheetTrigger>
+             <SheetContent side="right" className="p-0 w-[90%] sm:w-[420px] border-l border-border bg-card">
+               <SheetHeader className="p-6 border-b border-border">
+                 <SheetTitle className="text-left font-display text-[0.7rem] uppercase tracking-widest">Kuis Panduan Berpikir</SheetTitle>
+               </SheetHeader>
+               <div className="h-[calc(100vh-80px)] overflow-hidden">
+                 <SmartAssistant onInsertText={handleInsertFromAssistant} />
+               </div>
+             </SheetContent>
+           </Sheet>
         </div>
       </main>
       
