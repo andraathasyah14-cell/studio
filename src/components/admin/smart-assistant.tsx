@@ -14,10 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   CheckCircle2, 
   ArrowRight,
-  BrainCircuit,
   RotateCcw,
   LayoutList,
-  ChevronRight,
   ClipboardCheck
 } from 'lucide-react';
 
@@ -81,14 +79,14 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
-      {/* Header Panel ala Form Header */}
+      {/* Header Panel - Quiz Header */}
       <div className="p-6 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-white text-black rounded-sm">
               <ClipboardCheck className="w-3.5 h-3.5" />
             </div>
-            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Thinking Form</h2>
+            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Thinking Quiz Form</h2>
           </div>
           {activeTemplate && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white" onClick={handleReset}>
@@ -123,8 +121,8 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
           <div className="space-y-3 pt-2">
             <div className="flex justify-between items-end">
               <div className="space-y-0.5">
-                <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground block">Progres Analisis</span>
-                <span className="text-[0.55rem] text-white/50">{sectionsCompleted} dari {totalSections} bab selesai</span>
+                <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground block">Progres Kuis</span>
+                <span className="text-[0.55rem] text-white/50">{answeredQuestions} dari {totalQuestions} pertanyaan</span>
               </div>
               <span className="text-xl font-display font-bold text-white leading-none">{progressPercent}%</span>
             </div>
@@ -141,7 +139,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
             <div className="space-y-2">
               <p className="text-[0.75rem] font-bold uppercase tracking-[0.2em]">Form Belum Dipilih</p>
               <p className="text-[0.65rem] italic leading-relaxed max-w-[200px]">
-                Silakan pilih template di atas untuk mulai mengisi panduan kuis berpikir.
+                Silakan pilih jenis analisis di atas untuk mulai mengisi kuis panduan berpikir.
               </p>
             </div>
           </div>
@@ -163,8 +161,8 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
                         <span className="font-display text-[0.65rem] font-bold uppercase tracking-[0.15em] text-white">
                           {section.title}
                         </span>
-                        <span className="text-[0.55rem] text-muted-foreground tracking-widest">
-                          {answeredInSection} PERTANYAAN TERJAWAB
+                        <span className="text-[0.55rem] text-muted-foreground tracking-widest uppercase">
+                          Bab {idx + 1} · {answeredInSection}/{questionsInSection} Terisi
                         </span>
                       </div>
                     </div>
@@ -194,11 +192,11 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         )}
       </div>
 
-      {/* Footer Tools ala Form Submission */}
+      {/* Footer Tools */}
       {activeTemplate && (
         <div className="p-6 border-t border-border bg-black/40 backdrop-blur-md">
           <Button
-            className="w-full text-[0.65rem] uppercase tracking-[0.2em] h-12 rounded-none bg-white text-black hover:bg-silver transition-all"
+            className="w-full text-[0.65rem] uppercase tracking-[0.2em] h-12 rounded-none bg-white text-black hover:bg-silver transition-all shadow-xl"
             onClick={handleInsertAll}
             disabled={answeredQuestions === 0}
           >
@@ -206,7 +204,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
             <ArrowRight className="w-3.5 h-3.5 ml-2" />
           </Button>
           <p className="mt-4 text-[0.55rem] italic text-muted-foreground/50 text-center leading-relaxed">
-            Klik tombol di atas untuk merangkai semua jawaban Anda menjadi draf Markdown di editor utama.
+            Klik tombol di atas untuk merangkai semua jawaban kuis menjadi draf draf Markdown di editor utama.
           </p>
         </div>
       )}

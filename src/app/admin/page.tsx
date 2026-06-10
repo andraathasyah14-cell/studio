@@ -6,12 +6,14 @@ import Footer from '@/components/layout/footer';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, Send, Trash2, Sparkles, FileText, ChevronRight } from 'lucide-react';
+import { Send, Trash2, FileText, Link as LinkIcon, Tag, Sparkles } from 'lucide-react';
 import SmartAssistant from '@/components/admin/smart-assistant';
 
 export default function AdminPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [paperLink, setPaperLink] = useState('');
+  const [tags, setTags] = useState('');
 
   const handleSaveDraft = () => {
     alert('Draf berhasil disimpan secara lokal.');
@@ -31,7 +33,7 @@ export default function AdminPage() {
       <Header />
       
       <main className="flex-1 flex h-[calc(100vh-56px)] overflow-hidden">
-        {/* Main Editor Section (Left) - Focus on Writing */}
+        {/* Main Editor Section (Left) */}
         <div className="flex-1 overflow-y-auto bg-[#0A0A0A]">
           <div className="max-w-[800px] mx-auto px-8 py-12 lg:px-16 lg:py-20 space-y-16">
             
@@ -46,7 +48,7 @@ export default function AdminPage() {
               </div>
               
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" onClick={() => {setTitle(''); setContent('');}}>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" onClick={() => {setTitle(''); setContent(''); setPaperLink(''); setTags('');}}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
                 <Button variant="outline" size="sm" className="text-[0.6rem] uppercase tracking-widest h-10 px-6 rounded-none border-border hover:bg-white hover:text-black transition-all" onClick={handleSaveDraft}>
@@ -56,6 +58,32 @@ export default function AdminPage() {
                   <Send className="w-4 h-4 mr-2" />
                   Publikasikan
                 </Button>
+              </div>
+            </div>
+
+            {/* Metadata Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.02] p-6 border border-white/5">
+              <div className="space-y-2">
+                <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  <LinkIcon className="w-3 h-3" /> Link Paper / Referensi
+                </label>
+                <Input 
+                  placeholder="https://..." 
+                  value={paperLink}
+                  onChange={(e) => setPaperLink(e.target.value)}
+                  className="bg-background/50 border-white/10 text-xs rounded-none focus-visible:ring-white/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                  <Tag className="w-3 h-3" /> Tags (Pisahkan dengan koma)
+                </label>
+                <Input 
+                  placeholder="Ekonomi, AI, Politik..." 
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  className="bg-background/50 border-white/10 text-xs rounded-none focus-visible:ring-white/20"
+                />
               </div>
             </div>
 
@@ -96,7 +124,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Smart Quiz Assistant Sidebar (Right) */}
+        {/* Smart Thinking Quiz Assistant Sidebar (Right) */}
         <aside className="w-[420px] hidden xl:block shrink-0 shadow-2xl">
           <SmartAssistant onInsertText={handleInsertFromAssistant} />
         </aside>
