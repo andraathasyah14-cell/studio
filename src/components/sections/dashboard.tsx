@@ -1,12 +1,22 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { resources } from "@/lib/data";
 import { FileText, Link as LinkIcon, Download, ExternalLink, Database, ArrowRight } from "lucide-react";
 
 export default function Dashboard() {
-  const activityData = Array.from({ length: 30 }, () => Math.floor(Math.random() * 100));
-  const max = Math.max(...activityData);
+  const [activityData, setActivityData] = useState<number[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // Generate random activity data only on the client to avoid hydration mismatch
+    const data = Array.from({ length: 30 }, () => Math.floor(Math.random() * 100));
+    setActivityData(data);
+    setIsMounted(true);
+  }, []);
+
+  const max = activityData.length > 0 ? Math.max(...activityData) : 1;
   
   // Ambil 3 sumber daya terbaru saja untuk pratinjau
   const recentResources = resources.slice(0, 3);
@@ -63,7 +73,7 @@ export default function Dashboard() {
       {/* Activity Graph */}
       <div className="space-y-4">
         <div className="h-20 flex items-end gap-1 px-4">
-          {activityData.map((v, i) => (
+          {isMounted && activityData.map((v, i) => (
             <div 
               key={i} 
               className="flex-1 bg-muted group relative cursor-default"
@@ -74,6 +84,9 @@ export default function Dashboard() {
               </div>
               <div className="w-full h-full bg-muted-foreground/10 group-hover:bg-muted-foreground/30 transition-colors" />
             </div>
+          ))}
+          {!isMounted && Array.from({ length: 30 }).map((_, i) => (
+            <div key={i} className="flex-1 bg-muted/20 h-4" />
           ))}
         </div>
         <p className="text-[0.6rem] text-muted-foreground tracking-widest text-center uppercase">
