@@ -6,7 +6,7 @@ import Footer from '@/components/layout/footer';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, Send, Trash2, Sparkles } from 'lucide-react';
+import { Save, Send, Trash2, Sparkles, FileText, ChevronRight } from 'lucide-react';
 import SmartAssistant from '@/components/admin/smart-assistant';
 
 export default function AdminPage() {
@@ -18,36 +18,41 @@ export default function AdminPage() {
   };
 
   const handleInsertFromAssistant = (text: string) => {
-    setContent(prev => prev + (prev ? '\n\n' : '') + text);
+    setContent(prev => {
+      const separator = prev ? '\n\n---\n\n' : '';
+      return prev + separator + text;
+    });
   };
 
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-white selection:text-black">
       <Header />
       
       <main className="flex-1 flex h-[calc(100vh-56px)] overflow-hidden">
-        {/* Main Editor Section (Left) - Clean and simple */}
-        <div className="flex-1 overflow-y-auto px-6 py-10 lg:px-12 border-r border-border">
-          <div className="max-w-[800px] mx-auto space-y-10">
+        {/* Main Editor Section (Left) - Focus on Writing */}
+        <div className="flex-1 overflow-y-auto bg-[#0A0A0A]">
+          <div className="max-w-[800px] mx-auto px-8 py-12 lg:px-16 lg:py-20 space-y-16">
             
-            {/* Admin Header Toolbar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
-              <div>
-                <h1 className="font-display text-2xl font-bold text-white mb-1">Editor Analisis</h1>
-                <p className="text-[0.65rem] uppercase tracking-widest text-muted-foreground">
-                  Drafting mode · Private admin view
-                </p>
+            {/* Editor Toolbar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-white/5 pb-10">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="text-[0.6rem] uppercase tracking-[0.2em]">Editor Analisis</span>
+                </div>
+                <h1 className="font-display text-xl font-bold text-white">Buat Tulisan Baru</h1>
               </div>
               
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" onClick={() => {setTitle(''); setContent('');}}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm" className="text-[0.6rem] uppercase tracking-widest h-10 px-5" onClick={handleSaveDraft}>
-                  <Save className="w-4 h-4 mr-2" />
+                <Button variant="outline" size="sm" className="text-[0.6rem] uppercase tracking-widest h-10 px-6 rounded-none border-border hover:bg-white hover:text-black transition-all" onClick={handleSaveDraft}>
                   Simpan Draf
                 </Button>
-                <Button size="sm" className="text-[0.6rem] uppercase tracking-widest bg-white text-black hover:bg-silver h-10 px-5">
+                <Button size="sm" className="text-[0.6rem] uppercase tracking-widest h-10 px-6 rounded-none bg-white text-black hover:bg-silver transition-all shadow-lg">
                   <Send className="w-4 h-4 mr-2" />
                   Publikasikan
                 </Button>
@@ -55,39 +60,51 @@ export default function AdminPage() {
             </div>
 
             {/* Editing Area */}
-            <div className="space-y-8">
-              <div className="space-y-2">
-                <label className="text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground block">Judul Analisis</label>
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <label className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground block font-bold">Judul Esai</label>
                 <Input
-                  placeholder="Masukkan judul..."
-                  className="text-4xl font-display font-bold bg-transparent border-none focus-visible:ring-0 p-0 h-auto placeholder:text-muted/10"
+                  placeholder="Masukkan judul analisis Anda..."
+                  className="text-4xl md:text-5xl font-display font-bold bg-transparent border-none focus-visible:ring-0 p-0 h-auto placeholder:text-white/5 tracking-tighter"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
               
-              <div className="space-y-2">
-                <label className="text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground block">Konten Analisis</label>
+              <div className="space-y-4 min-h-[50vh]">
+                <label className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground block font-bold">Konten Analisis</label>
                 <Textarea
                   placeholder="Mulai menulis draf akhir Anda di sini..."
-                  className="min-h-[60vh] bg-transparent border-none focus-visible:ring-0 p-0 text-lg font-serif italic leading-relaxed placeholder:text-muted/10 resize-none"
+                  className="min-h-[60vh] bg-transparent border-none focus-visible:ring-0 p-0 text-xl font-serif italic leading-relaxed placeholder:text-white/5 resize-none"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
               </div>
             </div>
+
+            {/* Editor Footer Status */}
+            <div className="pt-8 border-t border-white/5 flex justify-between items-center text-[0.6rem] uppercase tracking-widest text-muted-foreground font-medium">
+              <div className="flex gap-6">
+                <span>{wordCount} Kata</span>
+                <span>Drafting Mode</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Auto-saved</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Smart Assistant Sidebar (Right) - The "Google Form" interface */}
-        <aside className="w-[400px] hidden xl:block shrink-0">
+        {/* Smart Quiz Assistant Sidebar (Right) */}
+        <aside className="w-[420px] hidden xl:block shrink-0 shadow-2xl">
           <SmartAssistant onInsertText={handleInsertFromAssistant} />
         </aside>
 
-        {/* Floating Assistant for smaller screens */}
+        {/* Floating Toggle for smaller screens */}
         <div className="xl:hidden fixed bottom-6 right-6">
-           <Button size="icon" className="rounded-full w-12 h-12 shadow-xl bg-white text-black hover:bg-silver">
-             <Sparkles className="w-5 h-5" />
+           <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver transition-transform hover:scale-110 active:scale-95">
+             <Sparkles className="w-6 h-6" />
            </Button>
         </div>
       </main>
