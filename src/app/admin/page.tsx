@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Trash2, FileText, Link as LinkIcon, Tag, Sparkles } from 'lucide-react';
-import SmartAssistant from '@/components/admin/smart-assistant';
+import AnalysisForm from '@/components/admin/analysis-form';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 export default function AdminPage() {
@@ -15,19 +15,19 @@ export default function AdminPage() {
   const [content, setContent] = useState('');
   const [paperLink, setPaperLink] = useState('');
   const [tags, setTags] = useState('');
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleSaveDraft = () => {
     alert('Draf berhasil disimpan secara lokal.');
   };
 
-  const handleInsertFromAssistant = (text: string) => {
+  const handleInsertFromForm = (text: string) => {
     setContent(prev => {
       const separator = prev ? '\n\n---\n\n' : '';
       return prev + separator + text;
     });
-    // Optional: close sheet on mobile after inserting
-    setIsAssistantOpen(false);
+    // Optional: close mobile drawer after generating
+    setIsFormOpen(false);
   };
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
@@ -52,7 +52,7 @@ export default function AdminPage() {
               </div>
               
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" onClick={() => {setTitle(''); setContent(''); setPaperLink(''); setTags('');}}>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" onClick={() => {if(window.confirm('Hapus semua draf di editor?')){setTitle(''); setContent('');}}}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
                 <Button variant="outline" size="sm" className="text-[0.6rem] uppercase tracking-widest h-10 px-6 rounded-none border-border hover:bg-white hover:text-black transition-all" onClick={handleSaveDraft}>
@@ -118,7 +118,7 @@ export default function AdminPage() {
             <div className="pt-8 border-t border-white/5 flex justify-between items-center text-[0.6rem] uppercase tracking-widest text-muted-foreground font-medium">
               <div className="flex gap-6">
                 <span>{wordCount} Kata</span>
-                <span>Draf Mode</span>
+                <span>Mode Penulisan</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -130,12 +130,12 @@ export default function AdminPage() {
 
         {/* Analysis Form Sidebar (Desktop Only) */}
         <aside className="w-[420px] hidden xl:block shrink-0 shadow-2xl overflow-hidden border-l border-border">
-          <SmartAssistant onInsertText={handleInsertFromAssistant} />
+          <AnalysisForm onInsertDraft={handleInsertFromForm} />
         </aside>
 
         {/* Floating Toggle for Mobile/Tablet */}
         <div className="xl:hidden fixed bottom-6 right-6">
-           <Sheet open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
+           <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
              <SheetTrigger asChild>
                <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver transition-transform hover:scale-110 active:scale-95">
                  <Sparkles className="w-6 h-6" />
@@ -146,7 +146,7 @@ export default function AdminPage() {
                  <SheetTitle className="text-left font-display text-[0.7rem] uppercase tracking-widest">Form Bantuan Analisis</SheetTitle>
                </SheetHeader>
                <div className="h-[calc(100vh-80px)] overflow-hidden">
-                 <SmartAssistant onInsertText={handleInsertFromAssistant} />
+                 <AnalysisForm onInsertDraft={handleInsertFromForm} />
                </div>
              </SheetContent>
            </Sheet>
