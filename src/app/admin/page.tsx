@@ -26,7 +26,7 @@ export default function AdminPage() {
       <Header />
       
       <main className="flex-1 flex h-[calc(100vh-56px)] overflow-hidden">
-        {/* Main Editor Section (Left) */}
+        {/* Main Editor Section (Left) - Clean and simple */}
         <div className="flex-1 overflow-y-auto px-6 py-10 lg:px-12 border-r border-border">
           <div className="max-w-[800px] mx-auto space-y-10">
             
@@ -79,7 +79,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Smart Assistant Sidebar (Right) */}
+        {/* Smart Assistant Sidebar (Right) - The "Google Form" interface */}
         <aside className="w-[400px] hidden xl:block shrink-0">
           <SmartAssistant onInsertText={handleInsertFromAssistant} />
         </aside>

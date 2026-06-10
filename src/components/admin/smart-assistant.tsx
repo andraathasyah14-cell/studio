@@ -74,7 +74,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BrainCircuit className="w-4 h-4 text-white" />
-            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Analysis Form Assistant</h2>
+            <h2 className="font-display text-[0.7rem] font-bold uppercase tracking-[0.2em] text-white">Thinking Assistant Form</h2>
           </div>
           {activeTemplate && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white" onClick={handleReset}>
@@ -112,7 +112,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         {activeTemplate && (
           <div className="space-y-2 pt-2">
             <div className="flex justify-between items-end">
-              <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Progres Jawaban</span>
+              <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Progres Pengisian</span>
               <span className="text-[0.6rem] font-medium text-white">{answeredQuestions} / {totalQuestions}</span>
             </div>
             <Progress value={progressPercent} className="h-0.5" />
@@ -120,7 +120,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         )}
       </div>
 
-      {/* Form Area */}
+      {/* Form Area (Google Form style) */}
       <div className="flex-1 overflow-y-auto">
         {!activeTemplate ? (
           <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-4 opacity-30">
@@ -128,7 +128,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
             <div className="space-y-1">
               <p className="text-[0.7rem] font-bold uppercase tracking-widest">Assistant Non-aktif</p>
               <p className="text-[0.65rem] italic leading-relaxed">
-                Pilih template untuk mengaktifkan panduan langkah-demi-langkah.
+                Pilih template untuk mulai mengisi panduan berpikir secara terstruktur.
               </p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
           <Accordion type="multiple" className="w-full">
             {activeTemplate.sections.map((section, idx) => {
               const answeredInSection = section.questions.filter(q => !!answers[q.id]?.trim()).length;
-              const isSectionComplete = answeredInSection === section.questions.length;
+              const isSectionComplete = answeredInSection === section.questions.length && section.questions.length > 0;
 
               return (
                 <AccordionItem key={idx} value={`item-${idx}`} className="border-b border-border">
@@ -192,10 +192,10 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
                 disabled={answeredQuestions === 0}
               >
                 <ArrowRight className="w-3 h-3 mr-2" />
-                Pindahkan Jawaban ke Editor
+                Pindahkan Hasil Analisis ke Editor
               </Button>
               <p className="text-[0.5rem] italic text-muted-foreground/60 leading-tight text-center px-4">
-                Tombol ini akan memformat jawaban Anda menjadi draf kasar dan menyisipkannya ke editor utama.
+                Ini akan menggabungkan semua jawaban Anda menjadi draf kasar di editor utama.
               </p>
           </div>
         </div>
