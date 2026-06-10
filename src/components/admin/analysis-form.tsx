@@ -66,26 +66,17 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
     setAnswers(prev => ({ ...prev, [id]: value }));
   };
 
-  // Pure manual logic: concatenate answers into a structured draft
+  // Updated logic: Only concatenate pure answers, no headers or questions
   const handleGenerateDraft = () => {
     if (!activeTemplate) return;
     
-    const draftContent = activeTemplate.sections.map(section => {
-      // Collect answers for this specific section
-      const sectionAnswers = section.questions
-        .map(q => {
-          const answer = answers[q.id]?.trim();
-          // We don't include the question text in the final draft, just the answer as a paragraph
-          return answer ? answer : null;
-        })
-        .filter(Boolean)
-        .join('\n\n');
-      
-      if (!sectionAnswers) return null;
-
-      // Wrap each section with its title as a heading
-      return `### ${section.title}\n\n${sectionAnswers}`;
-    }).filter(Boolean).join('\n\n---\n\n');
+    const draftContent = activeTemplate.sections
+      .flatMap(section => 
+        section.questions
+          .map(q => answers[q.id]?.trim())
+          .filter(Boolean)
+      )
+      .join('\n\n');
     
     if (draftContent) {
       onInsertDraft(draftContent);
@@ -136,7 +127,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             <div className="flex justify-between items-end">
               <div className="space-y-0.5">
                 <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground block">Progres Pengisian</span>
-                <span className="text-[0.55rem] text-white/50">{answeredQuestions} / {totalQuestions} Pertanyaan Dijawab</span>
+                <span className="text-[0.55rem] text-white/50">{answeredQuestions} / {totalQuestions} Terjawab</span>
               </div>
               <span className="text-xl font-display font-bold text-white leading-none">{progressPercent}%</span>
             </div>
@@ -145,7 +136,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
         )}
       </div>
 
-      {/* Questions Area (The "Quiz") */}
+      {/* Questions Area */}
       <div className="flex-1 overflow-y-auto">
         {!activeTemplate ? (
           <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-4 opacity-20">
@@ -185,7 +176,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
                     {section.questions.map((q, qIdx) => (
                       <div key={q.id} className="space-y-4 relative pl-4 border-l border-white/5 focus-within:border-white transition-colors">
                         <div className="space-y-1">
-                          <span className="text-[0.55rem] text-muted-foreground uppercase tracking-tighter">Bab {idx + 1}.{qIdx + 1}</span>
+                          <span className="text-[0.55rem] text-muted-foreground uppercase tracking-tighter">Bagian {idx + 1}.{qIdx + 1}</span>
                           <label className="text-[0.75rem] font-medium text-white/80 leading-relaxed block">
                             {q.text}
                           </label>
@@ -218,7 +209,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             <FileText className="w-3.5 h-3.5 ml-2 transition-all" />
           </Button>
           <p className="mt-4 text-[0.55rem] italic text-muted-foreground/50 text-center leading-relaxed">
-            Klik untuk menyusun jawaban manual Anda menjadi draf artikel otomatis di editor.
+            Klik untuk memasukkan jawaban murni Anda ke dalam editor utama.
           </p>
         </div>
       )}
