@@ -165,3 +165,13 @@ export const ANALYSIS_TEMPLATES: Record<string, Template> = {
     ]
   }
 };
+
+export const generateTemplateText = (templateId: string): string => {
+  const template = ANALYSIS_TEMPLATES[templateId];
+  if (!template) return '';
+
+  return template.sections.map(section => {
+    const questions = section.questions.map(q => `- ${q.text}\n\n[Tulis jawaban Anda di sini]\n`).join('\n');
+    return `### ${section.title}\n\n${questions}`;
+  }).join('\n\n---\n\n');
+};
