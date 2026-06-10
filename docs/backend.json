@@ -1,0 +1,110 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User account details including administrative privileges.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "admin": { "type": "boolean", "description": "Whether the user has full CMS access." }
+      },
+      "required": ["uid", "email", "admin"]
+    },
+    "Essay": {
+      "title": "Essay/Opinion",
+      "description": "Core content pieces including drafts and published articles.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "summary": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "published", "scheduled", "deleted"] },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "scheduledAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Paper": {
+      "title": "Academic Paper",
+      "description": "Metadata for uploaded PDF research papers.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "year": { "type": "number" },
+        "abstract": { "type": "string" },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "category": { "type": "string" },
+        "storagePath": { "type": "string", "description": "Path to PDF in Firebase Storage" },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Reference": {
+      "title": "Reference Source",
+      "description": "Citations and sources for the reference bank.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "source": { "type": "string" },
+        "quote": { "type": "string" },
+        "link": { "type": "string" },
+        "category": { "type": "string" }
+      }
+    },
+    "ActivityLog": {
+      "title": "Admin Activity Log",
+      "description": "Record of administrative actions.",
+      "type": "object",
+      "properties": {
+        "adminId": { "type": "string" },
+        "action": { "type": "string" },
+        "targetId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "metadata": { "type": "object" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Store user profiles and admin flags."
+    },
+    "/essays/{essayId}": {
+      "schema": "Essay",
+      "description": "Collection of all articles and drafts."
+    },
+    "/essays/{essayId}/revisions/{revisionId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "Version history for articles."
+    },
+    "/papers/{paperId}": {
+      "schema": "Paper",
+      "description": "Repository for academic research metadata."
+    },
+    "/references/{refId}": {
+      "schema": "Reference",
+      "description": "Bank for important quotes and citations."
+    },
+    "/activity_logs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Audit trail for admin operations."
+    }
+  }
+}
