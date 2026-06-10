@@ -17,8 +17,15 @@ import {
   RotateCcw,
   LayoutList,
   ClipboardCheck,
-  FileText
+  ChevronDown
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SmartAssistantProps {
   onInsertText: (text: string) => void;
@@ -29,6 +36,19 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const activeTemplate = selectedTemplateKey !== 'none' ? ANALYSIS_TEMPLATES[selectedTemplateKey] : null;
+
+  // Handle template change with confirmation
+  const handleTemplateChange = (value: string) => {
+    const hasAnswers = Object.values(answers).some(a => a.trim().length > 0);
+    
+    if (hasAnswers) {
+      const confirmChange = window.confirm("Jawaban saat ini akan hilang. Lanjutkan?");
+      if (!confirmChange) return;
+    }
+    
+    setSelectedTemplateKey(value);
+    setAnswers({});
+  };
 
   // Progress calculations
   const totalQuestions = useMemo(() => {
@@ -51,14 +71,14 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
     if (!activeTemplate) return;
     
     const draftContent = activeTemplate.sections.map(s => {
-      const qText = s.questions
+      const answersInSection = s.questions
         .filter(q => answers[q.id]?.trim())
-        .map(q => `> ${q.text}\n\n${answers[q.id]}`)
+        .map(q => answers[q.id])
         .join('\n\n');
       
-      if (!qText) return '';
-      return `## ${s.title}\n\n${qText}`;
-    }).filter(Boolean).join('\n\n---\n\n');
+      if (!answersInSection) return '';
+      return `${s.title}\n\n${answersInSection}`;
+    }).filter(Boolean).join('\n\n');
     
     if (draftContent) {
       onInsertText(draftContent);
@@ -66,13 +86,13 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
   };
 
   const handleReset = () => {
-    if (confirm('Bersihkan semua jawaban kuesioner?')) {
+    if (window.confirm('Bersihkan semua jawaban form?')) {
       setAnswers({});
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-card">
+    <div className="flex flex-col h-full bg-card border-l border-border">
       {/* Header Panel - Analysis Selection */}
       <div className="p-6 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent space-y-6">
         <div className="flex items-center justify-between">
@@ -90,24 +110,18 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
         </div>
 
         <div className="space-y-3">
-          <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Pilih Jenis Analisis:</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              onClick={() => {setSelectedTemplateKey('none'); setAnswers({});}}
-              className={`px-3 py-1.5 text-[0.6rem] uppercase tracking-wider border transition-all text-center ${selectedTemplateKey === 'none' ? 'bg-white text-black border-white' : 'border-border text-muted-foreground hover:border-gray-500'}`}
-            >
-              Tanpa Template
-            </button>
-            {Object.values(ANALYSIS_TEMPLATES).map(t => (
-              <button
-                key={t.id}
-                onClick={() => {setSelectedTemplateKey(t.id); setAnswers({});}}
-                className={`px-3 py-1.5 text-[0.6rem] uppercase tracking-wider border transition-all text-center leading-tight h-full flex items-center justify-center ${selectedTemplateKey === t.id ? 'bg-white text-black border-white' : 'border-border text-muted-foreground hover:border-gray-500'}`}
-              >
-                {t.title}
-              </button>
-            ))}
-          </div>
+          <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Jenis Analisis:</label>
+          <Select value={selectedTemplateKey} onValueChange={handleTemplateChange}>
+            <SelectTrigger className="w-full bg-background/50 border-border rounded-none text-[0.7rem] uppercase tracking-widest h-10">
+              <SelectValue placeholder="Pilih Template" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border rounded-none">
+              <SelectItem value="none" className="text-[0.7rem] uppercase tracking-widest">Tanpa Template</SelectItem>
+              <SelectItem value="academic" className="text-[0.7rem] uppercase tracking-widest">Analisis Paper Akademik</SelectItem>
+              <SelectItem value="news" className="text-[0.7rem] uppercase tracking-widest">Analisis Berita</SelectItem>
+              <SelectItem value="issue" className="text-[0.7rem] uppercase tracking-widest">Analisis Isu</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {activeTemplate && (
@@ -164,7 +178,7 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
                     {section.questions.map((q, qIdx) => (
                       <div key={q.id} className="space-y-4 relative pl-4 border-l border-white/5 focus-within:border-white transition-colors">
                         <div className="space-y-1">
-                          <span className="text-[0.55rem] text-muted-foreground uppercase tracking-tighter">Q {idx + 1}.{qIdx + 1}</span>
+                          <span className="text-[0.55rem] text-muted-foreground uppercase tracking-tighter">Pertanyaan {idx + 1}.{qIdx + 1}</span>
                           <label className="text-[0.75rem] font-medium text-white/80 leading-relaxed block">
                             {q.text}
                           </label>
@@ -193,11 +207,11 @@ export default function SmartAssistant({ onInsertText }: SmartAssistantProps) {
             onClick={handleGenerateDraft}
             disabled={answeredQuestions === 0}
           >
-            Hasilkan Draf Analisis
+            Generate Draft
             <Sparkles className="w-3.5 h-3.5 ml-2 group-hover:fill-current transition-all" />
           </Button>
           <p className="mt-4 text-[0.55rem] italic text-muted-foreground/50 text-center leading-relaxed">
-            Klik untuk menyusun jawaban kuesioner menjadi draf artikel otomatis.
+            Klik untuk menyusun jawaban form menjadi draf artikel otomatis.
           </p>
         </div>
       )}
