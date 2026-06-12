@@ -12,7 +12,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LogIn, Key, Mail, ShieldCheck } from 'lucide-react';
+import { Key, Mail, ShieldCheck, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -96,9 +96,7 @@ export default function LoginPage() {
       toast({ 
         variant: "destructive", 
         title: "Google Login Gagal", 
-        description: error.message.includes('auth/api-key-not-valid') 
-          ? "API Key Firebase tidak valid. Periksa konfigurasi di .env" 
-          : error.message 
+        description: error.message 
       });
     }
   };
@@ -233,12 +231,6 @@ export default function LoginPage() {
             </Button>
           </div>
         </div>
-
-        <footer className="text-center">
-          <p className="text-[0.55rem] text-muted-foreground italic leading-relaxed">
-            Hanya administrator yang dapat mengakses data riset dan publikasi.
-          </p>
-        </footer>
       </div>
     </div>
   );

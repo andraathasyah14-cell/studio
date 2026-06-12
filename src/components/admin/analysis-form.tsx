@@ -12,7 +12,6 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  CheckCircle2, 
   RotateCcw,
   LayoutList,
   ClipboardCheck,
@@ -67,15 +66,19 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const handleGenerateDraft = () => {
     if (!activeTemplate) return;
     
-    // CRITICAL: Hanya mengambil jawaban yang diketik (murni teks)
-    // Tanpa judul bab, tanpa pertanyaan kuis
-    const draftContent = activeTemplate.sections
+    /**
+     * LOGIKA MURNI TEKS:
+     * Mengambil semua jawaban yang tidak kosong, menggabungkannya dengan spasi antar jawaban.
+     * Tanpa Judul Bab, Tanpa Pertanyaan.
+     */
+    const pureAnswers = activeTemplate.sections
       .flatMap(section => 
         section.questions
           .map(q => answers[q.id]?.trim())
           .filter(Boolean)
-      )
-      .join('\n\n');
+      );
+    
+    const draftContent = pureAnswers.join('\n\n');
     
     if (draftContent) {
       onInsertDraft(draftContent);
@@ -89,7 +92,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-card border-l border-border">
+    <div className="flex flex-col h-full bg-card border-l border-border selection:bg-white selection:text-black">
       <div className="p-4 md:p-6 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -144,37 +147,35 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
           </div>
         ) : (
           <Accordion type="multiple" defaultValue={['item-0']} className="w-full">
-            {activeTemplate.sections.map((section, idx) => {
-              return (
-                <AccordionItem key={idx} value={`item-${idx}`} className="border-b border-border last:border-0">
-                  <AccordionTrigger className="hover:no-underline py-4 px-5 hover:bg-white/[0.02] group">
-                    <div className="flex items-center gap-3 text-left w-full">
-                      <div className="w-5 h-5 rounded-full border border-muted-foreground/30 text-muted-foreground flex items-center justify-center text-[0.55rem]">
-                        {idx + 1}
-                      </div>
-                      <span className="font-display text-[0.6rem] font-bold uppercase tracking-[0.1em] text-white">
-                        {section.title}
-                      </span>
+            {activeTemplate.sections.map((section, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`} className="border-b border-border last:border-0">
+                <AccordionTrigger className="hover:no-underline py-4 px-5 hover:bg-white/[0.02] group">
+                  <div className="flex items-center gap-3 text-left w-full">
+                    <div className="w-5 h-5 rounded-full border border-muted-foreground/30 text-muted-foreground flex items-center justify-center text-[0.55rem]">
+                      {idx + 1}
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="p-5 bg-black/20 space-y-8">
-                    {section.questions.map((q) => (
-                      <div key={q.id} className="space-y-3 relative pl-3 border-l border-white/5 focus-within:border-white transition-colors">
-                        <label className="text-[0.7rem] font-medium text-white/80 leading-relaxed block">
-                          {q.text}
-                        </label>
-                        <Textarea
-                          placeholder={q.placeholder}
-                          value={answers[q.id] || ''}
-                          onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                          className="bg-background/40 border-border text-[0.85rem] min-h-[120px] resize-none focus-visible:ring-0 focus-visible:border-white transition-all rounded-none font-serif italic border-dashed py-3 text-white"
-                        />
-                      </div>
-                    ))}
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
+                    <span className="font-display text-[0.6rem] font-bold uppercase tracking-[0.1em] text-white">
+                      {section.title}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-5 bg-black/20 space-y-8">
+                  {section.questions.map((q) => (
+                    <div key={q.id} className="space-y-3 relative pl-3 border-l border-white/5 focus-within:border-white transition-colors">
+                      <label className="text-[0.7rem] font-medium text-white/80 leading-relaxed block">
+                        {q.text}
+                      </label>
+                      <Textarea
+                        placeholder={q.placeholder}
+                        value={answers[q.id] || ''}
+                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                        className="bg-background/40 border-border text-white text-[0.85rem] min-h-[120px] resize-none focus-visible:ring-0 focus-visible:border-white transition-all rounded-none font-serif italic border-dashed py-3"
+                      />
+                    </div>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
           </Accordion>
         )}
       </div>
@@ -186,11 +187,11 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             onClick={handleGenerateDraft}
             disabled={answeredQuestions === 0}
           >
-            Pindahkan Jawaban
+            Pindahkan Jawaban Murni
             <FileText className="w-3.5 h-3.5 ml-2" />
           </Button>
           <p className="mt-3 text-[0.5rem] italic text-muted-foreground/50 text-center leading-relaxed px-2">
-            Klik untuk menyusun jawaban murni Anda ke dalam editor utama sebagai satu kesatuan teks.
+            Hanya memindahkan jawaban Anda (tanpa pertanyaan) sebagai satu kesatuan teks ke editor.
           </p>
         </div>
       )}
