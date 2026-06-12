@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Konfigurasi Firebase Client yang telah diperbarui.
+ * Konfigurasi Firebase Client yang diperbarui sesuai dengan kredensial proyek Anda.
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyCN9rlY6BCBIVTWpvyP5oEreHKlypP2yAU",

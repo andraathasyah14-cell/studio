@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useFirestore } from '@/firebase';
 import { 
@@ -12,15 +12,17 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Key, Mail, ShieldCheck, LogIn } from 'lucide-react';
+import { Key, Mail, ShieldCheck, LogIn, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unauthorizedDomain, setUnauthorizedDomain] = useState<string | null>(null);
   
   const auth = useAuth();
   const db = useFirestore();
@@ -31,6 +33,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!auth) return;
     setLoading(true);
+    setUnauthorizedDomain(null);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
@@ -46,7 +49,7 @@ export default function LoginPage() {
       }
 
       const userData = userDoc.data();
-      if (userData?.admin === true || !userDoc.exists()) {
+      if (userData?.admin === true) {
         toast({ title: "Login Berhasil", description: "Selamat datang di CMS Andra Ngelantur." });
         router.push('/admin/AndraNgelantur99');
       } else {
@@ -63,6 +66,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!auth || !db) return;
     setLoading(true);
+    setUnauthorizedDomain(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, 'users', userCredential.user.uid), {
@@ -87,6 +91,7 @@ export default function LoginPage() {
       toast({ variant: "destructive", title: "Error", description: "Firebase belum terinisialisasi." });
       return;
     }
+    setUnauthorizedDomain(null);
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -108,10 +113,11 @@ export default function LoginPage() {
       
       if (error.code === 'auth/unauthorized-domain') {
         const domain = typeof window !== 'undefined' ? window.location.hostname : 'domain ini';
+        setUnauthorizedDomain(domain);
         toast({ 
           variant: "destructive", 
           title: "Domain Tidak Terdaftar", 
-          description: `Harap tambahkan domain "${domain}" ke 'Authorized Domains' di Firebase Console (Authentication > Settings).` 
+          description: "Silakan periksa instruksi di layar untuk mendaftarkan domain ini." 
         });
       } else {
         toast({ 
@@ -135,6 +141,18 @@ export default function LoginPage() {
           <h1 className="font-display text-4xl font-bold tracking-tighter text-white">Workspace</h1>
           <p className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground">Andra Ngelantur CMS v1.0</p>
         </header>
+
+        {unauthorizedDomain && (
+          <Alert variant="destructive" className="rounded-none border-rose-500/50 bg-rose-500/5">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle className="text-[0.7rem] uppercase tracking-widest font-bold">Domain Belum Diizinkan</AlertTitle>
+            <AlertDescription className="text-[0.75rem] leading-relaxed mt-2">
+              Google Login gagal karena domain ini belum terdaftar. Silakan salin domain berikut:<br/>
+              <code className="block p-2 bg-black mt-2 text-white font-mono break-all">{unauthorizedDomain}</code>
+              <p className="mt-2">Lalu masukkan ke <strong>Firebase Console &gt; Authentication &gt; Settings &gt; Authorized Domains</strong>.</p>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="border border-border bg-card p-1">
           <Tabs defaultValue="login" className="w-full">

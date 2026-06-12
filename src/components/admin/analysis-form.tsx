@@ -68,7 +68,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
     
     /**
      * LOGIKA MURNI TEKS JAWABAN:
-     * Mengambil hanya jawaban yang diisi oleh user.
+     * Mengambil HANYA jawaban yang diisi oleh user.
      * Tidak menyertakan judul bab, pertanyaan, atau metadata template.
      */
     const pureAnswers = activeTemplate.sections
