@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useUser();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,12 +37,19 @@ export default function LoginPage() {
     }
   }, []);
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/admin/AndraNgelantur99');
+    }
+  }, [user, authLoading, router]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Login Gagal", description: "Email atau kata sandi salah." });
@@ -78,10 +86,11 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      const userRef = doc(db, 'users', result.user.uid);
+      const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
-        await setDoc(doc(db, 'users', result.user.uid), {
+        await setDoc(userRef, {
           uid: result.user.uid,
           email: result.user.email,
           name: result.user.displayName,
@@ -106,6 +115,8 @@ export default function LoginPage() {
     navigator.clipboard.writeText(currentDomain);
     toast({ title: "Tersalin!", description: "Domain telah disalin ke clipboard." });
   };
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6 selection:bg-white selection:text-black">

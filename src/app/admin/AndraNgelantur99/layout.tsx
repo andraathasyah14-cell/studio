@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUser, useDoc, useFirestore, useAuth } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { LayoutDashboard, FileText, BookOpen, Library, LogOut, BarChart3, PlusCircle } from 'lucide-react';
@@ -39,8 +39,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         setIsAdmin(false);
         router.push('/');
       }
+    } else if (!profileLoading && user && !profile) {
+      // Handle case where user is logged in but profile doc doesn't exist yet
+      // This can happen on first Google Login
+      const createProfile = async () => {
+        if (!db || !user) return;
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || 'Admin',
+          admin: true,
+          createdAt: new Date().toISOString()
+        });
+        setIsAdmin(true);
+      };
+      createProfile();
     }
-  }, [profile, router]);
+  }, [profile, profileLoading, user, db, router]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -49,12 +64,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  if (userLoading || profileLoading || isAdmin === null) {
+  if (userLoading || (user && isAdmin === null)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-12 h-12 bg-white/10 rounded-full" />
-          <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Otentikasi Admin...</span>
+          <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Memuat Workspace...</span>
         </div>
       </div>
     );
