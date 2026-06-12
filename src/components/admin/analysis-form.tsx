@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -67,9 +68,9 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
     if (!activeTemplate) return;
     
     /**
-     * LOGIKA MURNI TEKS JAWABAN:
-     * Mengambil HANYA jawaban yang diisi oleh user.
-     * Tidak menyertakan judul bab, pertanyaan, atau metadata template.
+     * LOGIKA JAWABAN MURNI:
+     * Mengambil HANYA teks jawaban dari user.
+     * Tidak menyertakan judul bagian atau teks pertanyaan.
      */
     const pureAnswers = activeTemplate.sections
       .flatMap(section => 
@@ -141,7 +142,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             <div className="space-y-2">
               <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em]">Pilih Template</p>
               <p className="text-[0.6rem] italic leading-relaxed max-w-[180px]">
-                Gunakan form untuk memandu analisis Anda secara sistematis.
+                Gunakan kuesioner untuk memandu riset Anda.
               </p>
             </div>
           </div>
@@ -191,7 +192,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             <FileText className="w-3.5 h-3.5 ml-2" />
           </Button>
           <p className="mt-3 text-[0.5rem] italic text-muted-foreground/50 text-center leading-relaxed px-2">
-            Hanya memindahkan jawaban Anda (tanpa pertanyaan) sebagai draf ke editor.
+            Hanya memindahkan jawaban Anda (tanpa struktur bab/pertanyaan) ke editor utama.
           </p>
         </div>
       )}

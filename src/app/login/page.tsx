@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Key, Mail, ShieldCheck, LogIn, AlertCircle } from 'lucide-react';
+import { Key, Mail, ShieldCheck, LogIn, AlertCircle, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -48,13 +49,7 @@ export default function LoginPage() {
         });
       }
 
-      const userData = userDoc.data();
-      if (userData?.admin === true) {
-        toast({ title: "Login Berhasil", description: "Selamat datang di CMS Andra Ngelantur." });
-        router.push('/admin/AndraNgelantur99');
-      } else {
-        toast({ variant: "destructive", title: "Akses Ditolak", description: "Akun Anda tidak memiliki hak akses admin." });
-      }
+      router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Login Gagal", description: "Email atau kata sandi salah." });
     } finally {
@@ -66,7 +61,6 @@ export default function LoginPage() {
     e.preventDefault();
     if (!auth || !db) return;
     setLoading(true);
-    setUnauthorizedDomain(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, 'users', userCredential.user.uid), {
@@ -87,10 +81,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth || !db) {
-      toast({ variant: "destructive", title: "Error", description: "Firebase belum terinisialisasi." });
-      return;
-    }
+    if (!auth || !db) return;
     setUnauthorizedDomain(null);
     const provider = new GoogleAuthProvider();
     try {
@@ -109,23 +100,19 @@ export default function LoginPage() {
       
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
-      console.error("Google Login Error:", error);
-      
       if (error.code === 'auth/unauthorized-domain') {
-        const domain = typeof window !== 'undefined' ? window.location.hostname : 'domain ini';
+        const domain = window.location.hostname;
         setUnauthorizedDomain(domain);
-        toast({ 
-          variant: "destructive", 
-          title: "Domain Tidak Terdaftar", 
-          description: "Silakan periksa instruksi di layar untuk mendaftarkan domain ini." 
-        });
       } else {
-        toast({ 
-          variant: "destructive", 
-          title: "Google Login Gagal", 
-          description: error.message 
-        });
+        toast({ variant: "destructive", title: "Gagal", description: error.message });
       }
+    }
+  };
+
+  const copyDomain = () => {
+    if (unauthorizedDomain) {
+      navigator.clipboard.writeText(unauthorizedDomain);
+      toast({ title: "Tersalin!", description: "Domain telah disalin ke clipboard." });
     }
   };
 
@@ -139,17 +126,21 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="font-display text-4xl font-bold tracking-tighter text-white">Workspace</h1>
-          <p className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground">Andra Ngelantur CMS v1.0</p>
+          <p className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground">Andra Ngelantur CMS</p>
         </header>
 
         {unauthorizedDomain && (
-          <Alert variant="destructive" className="rounded-none border-rose-500/50 bg-rose-500/5">
+          <Alert variant="destructive" className="rounded-none border-rose-500 bg-rose-500/10">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="text-[0.7rem] uppercase tracking-widest font-bold">Domain Belum Diizinkan</AlertTitle>
+            <AlertTitle className="text-[0.7rem] uppercase tracking-widest font-bold">Domain Tidak Terdaftar</AlertTitle>
             <AlertDescription className="text-[0.75rem] leading-relaxed mt-2">
-              Google Login gagal karena domain ini belum terdaftar. Silakan salin domain berikut:<br/>
-              <code className="block p-2 bg-black mt-2 text-white font-mono break-all">{unauthorizedDomain}</code>
-              <p className="mt-2">Lalu masukkan ke <strong>Firebase Console &gt; Authentication &gt; Settings &gt; Authorized Domains</strong>.</p>
+              Salin domain di bawah ini dan masukkan ke <strong>Firebase Console > Authentication > Settings > Authorized Domains</strong>:
+              <div className="flex items-center gap-2 mt-3 p-2 bg-black/50 border border-rose-500/20">
+                <code className="flex-1 font-mono text-[0.65rem] truncate">{unauthorizedDomain}</code>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyDomain}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         )}
@@ -210,13 +201,13 @@ export default function LoginPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="bg-background border-border text-white text-sm rounded-none h-11 focus-visible:ring-white/20"
-                    placeholder="Andra Ngelantur"
+                    placeholder="Admin"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                    <Mail className="w-3 h-3" /> Email Baru
+                    <Mail className="w-3 h-3" /> Email
                   </label>
                   <Input 
                     type="email"
@@ -245,7 +236,7 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full bg-white text-black font-bold uppercase text-[0.65rem] tracking-widest h-12 rounded-none hover:bg-silver transition-all"
                 >
-                  {loading ? 'Memproses...' : 'Daftar Admin'}
+                  {loading ? 'Memproses...' : 'Daftar Akun'}
                 </Button>
               </form>
             </TabsContent>
@@ -257,7 +248,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-[0.5rem] uppercase tracking-widest">
-                <span className="bg-card px-2 text-muted-foreground font-bold">Opsi Lain</span>
+                <span className="bg-card px-2 text-muted-foreground font-bold">Opsi Cepat</span>
               </div>
             </div>
 
