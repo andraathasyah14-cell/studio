@@ -67,11 +67,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const handleGenerateDraft = () => {
     if (!activeTemplate) return;
     
-    /**
-     * LOGIKA JAWABAN MURNI:
-     * Mengambil HANYA teks jawaban dari user.
-     * Tidak menyertakan judul bagian atau teks pertanyaan.
-     */
+    // LOGIKA JAWABAN MURNI: Mengambil HANYA teks jawaban dari user.
     const pureAnswers = activeTemplate.sections
       .flatMap(section => 
         section.questions
@@ -192,7 +188,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             <FileText className="w-3.5 h-3.5 ml-2" />
           </Button>
           <p className="mt-3 text-[0.5rem] italic text-muted-foreground/50 text-center leading-relaxed px-2">
-            Hanya memindahkan jawaban Anda (tanpa struktur bab/pertanyaan) ke editor utama.
+            Hanya memindahkan jawaban Anda (tanpa judul bab/pertanyaan) ke editor utama.
           </p>
         </div>
       )}

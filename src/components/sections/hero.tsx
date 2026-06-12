@@ -7,6 +7,7 @@ import { collection } from 'firebase/firestore';
 
 export default function Hero() {
   const db = useFirestore();
+  
   const { data: essays } = useCollection(collection(db, 'essays'));
   const { data: papers } = useCollection(collection(db, 'papers'));
   const { data: refs } = useCollection(collection(db, 'references'));
@@ -15,7 +16,7 @@ export default function Hero() {
     essays: essays?.length || 0,
     papers: papers?.length || 0,
     books: refs?.filter(r => r.category?.toLowerCase().includes('buku') || r.type === 'book').length || 0,
-    revisions: 0, // Versi audit trail
+    revisions: 0,
     retractions: 0
   };
 

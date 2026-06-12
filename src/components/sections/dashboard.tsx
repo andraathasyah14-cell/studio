@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { collection, query, limit, orderBy } from "firebase/firestore";
 import { FileText, Link as LinkIcon, Database, ArrowRight } from "lucide-react";
 
 export default function Dashboard() {
@@ -16,7 +16,11 @@ export default function Dashboard() {
   const { data: papers } = useCollection(collection(db, 'papers'));
   const { data: refs } = useCollection(collection(db, 'references'));
 
-  const recentRefsQuery = useMemo(() => query(collection(db, 'references'), limit(3)), [db]);
+  const recentRefsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'references'), orderBy('title', 'asc'), limit(3));
+  }, [db]);
+  
   const { data: recentResources } = useCollection(recentRefsQuery);
 
   useEffect(() => {
@@ -59,30 +63,31 @@ export default function Dashboard() {
         </div>
         
         <div className="grid grid-cols-1 gap-px bg-border border border-border">
-          {recentResources?.map((res: any, i: number) => (
-            <div key={i} className="bg-background p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <ResourceIcon type={res.type || 'web'} />
-                  <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{res.category}</span>
+          {recentResources && recentResources.length > 0 ? (
+            recentResources.map((res: any, i: number) => (
+              <div key={i} className="bg-background p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <ResourceIcon type={res.type || 'web'} />
+                    <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{res.category}</span>
+                  </div>
+                  <h4 className="font-display text-[0.85rem] font-medium text-white group-hover:text-primary transition-colors">
+                    {res.title}
+                  </h4>
                 </div>
-                <h4 className="font-display text-[0.85rem] font-medium text-white group-hover:text-primary transition-colors">
-                  {res.title}
-                </h4>
+                <a 
+                  href={res.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[0.6rem] uppercase tracking-widest text-muted-foreground hover:text-white border border-border px-3 py-1.5"
+                >
+                  Lihat
+                </a>
               </div>
-              <a 
-                href={res.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-[0.6rem] uppercase tracking-widest text-muted-foreground hover:text-white border border-border px-3 py-1.5"
-              >
-                Lihat
-              </a>
-            </div>
-          ))}
-          {recentResources?.length === 0 && (
+            ))
+          ) : (
             <div className="bg-background p-10 text-center text-[0.7rem] italic text-muted-foreground">
-              Belum ada referensi yang ditambahkan.
+              Belum ada referensi yang ditambahkan ke database.
             </div>
           )}
         </div>
@@ -104,7 +109,7 @@ export default function Dashboard() {
           ))}
         </div>
         <p className="text-[0.6rem] text-muted-foreground tracking-widest text-center uppercase">
-          Grafik Aktivitas · 30 hari terakhir
+          Grafik Aktivitas · Sinkron Real-time
         </p>
       </div>
     </section>
