@@ -68,8 +68,8 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
     
     /**
      * LOGIKA MURNI TEKS:
-     * Mengambil semua jawaban yang tidak kosong, menggabungkannya dengan spasi antar jawaban.
-     * Tanpa Judul Bab, Tanpa Pertanyaan.
+     * Hanya mengambil jawaban yang diisi oleh user.
+     * Tidak menyertakan judul bab, pertanyaan, atau metadata template.
      */
     const pureAnswers = activeTemplate.sections
       .flatMap(section => 
@@ -191,7 +191,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             <FileText className="w-3.5 h-3.5 ml-2" />
           </Button>
           <p className="mt-3 text-[0.5rem] italic text-muted-foreground/50 text-center leading-relaxed px-2">
-            Hanya memindahkan jawaban Anda (tanpa pertanyaan) sebagai satu kesatuan teks ke editor.
+            Hanya memindahkan jawaban Anda (tanpa pertanyaan) sebagai draf ke editor.
           </p>
         </div>
       )}
