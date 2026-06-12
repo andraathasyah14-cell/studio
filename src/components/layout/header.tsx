@@ -4,7 +4,6 @@ const navLinks = [
   { href: "/#essays", label: "Esai" },
   { href: "/#reading", label: "Bacaan" },
   { href: "/pustaka", label: "Pustaka" },
-  { href: "/admin", label: "Admin" },
   { href: "/#about", label: "Tentang" },
 ];
 
