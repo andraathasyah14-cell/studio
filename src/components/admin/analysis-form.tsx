@@ -67,6 +67,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const handleGenerateDraft = () => {
     if (!activeTemplate) return;
     
+    // HANYA mengambil jawaban yang diketik (murni teks), tanpa judul bab atau pertanyaan
     const draftContent = activeTemplate.sections
       .flatMap(section => 
         section.questions
@@ -107,7 +108,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
         <div className="space-y-3">
           <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground">Pilih Template:</label>
           <Select value={selectedTemplateKey} onValueChange={handleTemplateChange}>
-            <SelectTrigger className="w-full bg-background/50 border-border rounded-none text-[0.65rem] uppercase tracking-widest h-9 md:h-10">
+            <SelectTrigger className="w-full bg-background/50 border-border rounded-none text-[0.65rem] uppercase tracking-widest h-10">
               <SelectValue placeholder="Pilih Kerangka" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border rounded-none">
@@ -176,7 +177,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
                           placeholder={q.placeholder}
                           value={answers[q.id] || ''}
                           onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                          className="bg-background/40 border-border text-[0.8rem] min-h-[100px] md:min-h-[120px] resize-none focus-visible:ring-0 focus-visible:border-white transition-all rounded-none font-serif italic border-dashed py-3"
+                          className="bg-background/40 border-border text-[0.85rem] min-h-[120px] resize-none focus-visible:ring-0 focus-visible:border-white transition-all rounded-none font-serif italic border-dashed py-3"
                         />
                       </div>
                     ))}
@@ -196,7 +197,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
             onClick={handleGenerateDraft}
             disabled={answeredQuestions === 0}
           >
-            Selesaikan Kuis & Pindahkan
+            Pindahkan Jawaban
             <FileText className="w-3.5 h-3.5 ml-2" />
           </Button>
           <p className="mt-3 text-[0.5rem] italic text-muted-foreground/50 text-center leading-relaxed px-2">

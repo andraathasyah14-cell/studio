@@ -1,16 +1,14 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Sparkles, Save, ArrowLeft, Link as LinkIcon, Tag, FileText } from 'lucide-react';
+import { Sparkles, ArrowLeft, Tag, FileText } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -35,8 +33,8 @@ export default function NewEssayPage() {
     });
     setIsFormOpen(false);
     toast({
-      title: "Jawaban Dipindahkan",
-      description: "Jawaban kuesioner telah disusun ke dalam editor utama.",
+      title: "Teks Berhasil Dipindahkan",
+      description: "Jawaban kuesioner Anda telah dimasukkan ke editor utama.",
     });
   };
 
@@ -58,7 +56,7 @@ export default function NewEssayPage() {
         authorId: user.uid,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        confidence: 70, // Default confidence
+        confidence: 70,
       });
 
       toast({
@@ -75,7 +73,6 @@ export default function NewEssayPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-background">
-      {/* Top Toolbar */}
       <header className="border-b border-border bg-card p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/AndraNgelantur99/essays">
@@ -109,21 +106,19 @@ export default function NewEssayPage() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Main Editor Section */}
         <main className="flex-1 overflow-y-auto p-4 md:p-12 lg:p-20">
           <div className="max-w-[800px] mx-auto space-y-12">
             
-            {/* Metadata Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.02] p-6 border border-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/[0.02] p-4 border border-border">
               <div className="space-y-2">
                 <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                   <Tag className="w-3 h-3" /> Kategori
                 </label>
                 <Input 
-                  placeholder="Ekonomi, Politik, dll..." 
+                  placeholder="Ekonomi, AI, dll..." 
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="bg-background/50 border-border text-xs rounded-none focus-visible:ring-white/20 h-9"
+                  className="bg-background/50 border-border text-xs rounded-none h-10"
                 />
               </div>
               <div className="space-y-2">
@@ -131,30 +126,28 @@ export default function NewEssayPage() {
                   <FileText className="w-3 h-3" /> Tags (Koma)
                 </label>
                 <Input 
-                  placeholder="AI, Pendidikan, Masa Depan..." 
+                  placeholder="Data, Masa Depan..." 
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  className="bg-background/50 border-border text-xs rounded-none focus-visible:ring-white/20 h-9"
+                  className="bg-background/50 border-border text-xs rounded-none h-10"
                 />
               </div>
             </div>
 
-            {/* Title Input */}
             <div className="space-y-4">
               <label className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground block font-bold">Judul Esai</label>
               <Input
                 placeholder="Masukkan judul..."
-                className="text-4xl md:text-5xl font-display font-bold bg-transparent border-none focus-visible:ring-0 p-0 h-auto placeholder:text-white/5 tracking-tighter"
+                className="text-3xl md:text-5xl font-display font-bold bg-transparent border-none focus-visible:ring-0 p-0 h-auto placeholder:text-white/5 tracking-tighter"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
             
-            {/* Content Textarea */}
             <div className="space-y-4 min-h-[50vh]">
               <label className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground block font-bold">Konten Analisis</label>
               <Textarea
-                placeholder="Tulis draf Anda di sini atau gunakan Form Analisis di samping..."
+                placeholder="Tulis draf Anda di sini atau gunakan Form Panduan..."
                 className="min-h-[50vh] bg-transparent border-none focus-visible:ring-0 p-0 text-lg md:text-xl font-serif italic leading-relaxed placeholder:text-white/5 resize-none"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -163,12 +156,10 @@ export default function NewEssayPage() {
           </div>
         </main>
 
-        {/* Analysis Form Sidebar (Desktop) */}
         <aside className="w-[400px] hidden xl:block border-l border-border bg-card overflow-hidden">
           <AnalysisForm onInsertDraft={handleInsertFromForm} />
         </aside>
 
-        {/* Floating Button for Analysis Form (Mobile/Tablet) */}
         <div className="xl:hidden fixed bottom-6 right-6 z-50">
           <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
             <SheetTrigger asChild>
