@@ -67,7 +67,8 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const handleGenerateDraft = () => {
     if (!activeTemplate) return;
     
-    // HANYA mengambil jawaban yang diketik (murni teks), tanpa judul bab atau pertanyaan
+    // CRITICAL: Hanya mengambil jawaban yang diketik (murni teks)
+    // Tanpa judul bab, tanpa pertanyaan kuis
     const draftContent = activeTemplate.sections
       .flatMap(section => 
         section.questions
@@ -89,8 +90,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
-      {/* Header Panel */}
-      <div className="p-4 md:p-6 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent space-y-4 md:space-y-6">
+      <div className="p-4 md:p-6 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-white text-black rounded-sm">
@@ -106,7 +106,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
         </div>
 
         <div className="space-y-3">
-          <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground">Pilih Template:</label>
+          <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground">Pilih Kerangka:</label>
           <Select value={selectedTemplateKey} onValueChange={handleTemplateChange}>
             <SelectTrigger className="w-full bg-background/50 border-border rounded-none text-[0.65rem] uppercase tracking-widest h-10">
               <SelectValue placeholder="Pilih Kerangka" />
@@ -131,7 +131,6 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
         )}
       </div>
 
-      {/* Questions Area */}
       <div className="flex-1 overflow-y-auto">
         {!activeTemplate ? (
           <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-4 opacity-20">
@@ -146,29 +145,20 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
         ) : (
           <Accordion type="multiple" defaultValue={['item-0']} className="w-full">
             {activeTemplate.sections.map((section, idx) => {
-              const questionsInSection = section.questions.length;
-              const answeredInSection = section.questions.filter(q => !!answers[q.id]?.trim()).length;
-              const isSectionComplete = answeredInSection === questionsInSection && questionsInSection > 0;
-
               return (
                 <AccordionItem key={idx} value={`item-${idx}`} className="border-b border-border last:border-0">
                   <AccordionTrigger className="hover:no-underline py-4 px-5 hover:bg-white/[0.02] group">
                     <div className="flex items-center gap-3 text-left w-full">
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center text-[0.55rem] transition-colors shrink-0 ${isSectionComplete ? 'bg-white border-white text-black' : 'border-muted-foreground/30 text-muted-foreground'}`}>
-                        {isSectionComplete ? <CheckCircle2 className="w-3 h-3" /> : idx + 1}
+                      <div className="w-5 h-5 rounded-full border border-muted-foreground/30 text-muted-foreground flex items-center justify-center text-[0.55rem]">
+                        {idx + 1}
                       </div>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-display text-[0.6rem] font-bold uppercase tracking-[0.1em] text-white">
-                          {section.title}
-                        </span>
-                        <span className="text-[0.5rem] text-muted-foreground uppercase tracking-wider">
-                          {answeredInSection}/{questionsInSection} Pertanyaan
-                        </span>
-                      </div>
+                      <span className="font-display text-[0.6rem] font-bold uppercase tracking-[0.1em] text-white">
+                        {section.title}
+                      </span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="p-5 bg-black/20 space-y-8">
-                    {section.questions.map((q, qIdx) => (
+                    {section.questions.map((q) => (
                       <div key={q.id} className="space-y-3 relative pl-3 border-l border-white/5 focus-within:border-white transition-colors">
                         <label className="text-[0.7rem] font-medium text-white/80 leading-relaxed block">
                           {q.text}
@@ -177,7 +167,7 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
                           placeholder={q.placeholder}
                           value={answers[q.id] || ''}
                           onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                          className="bg-background/40 border-border text-[0.85rem] min-h-[120px] resize-none focus-visible:ring-0 focus-visible:border-white transition-all rounded-none font-serif italic border-dashed py-3"
+                          className="bg-background/40 border-border text-[0.85rem] min-h-[120px] resize-none focus-visible:ring-0 focus-visible:border-white transition-all rounded-none font-serif italic border-dashed py-3 text-white"
                         />
                       </div>
                     ))}
@@ -189,7 +179,6 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
         )}
       </div>
 
-      {/* Generate Button Area */}
       {activeTemplate && (
         <div className="p-4 md:p-6 border-t border-border bg-black/40 backdrop-blur-md">
           <Button

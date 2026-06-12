@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -13,7 +12,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LogIn, Key, Mail, UserPlus, ShieldCheck } from 'lucide-react';
+import { LogIn, Key, Mail, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -34,7 +33,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // Cek apakah user adalah admin
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       if (userDoc.exists() && userDoc.data().admin === true) {
         toast({ title: "Login Berhasil", description: "Selamat datang di CMS Andra Ngelantur." });
@@ -55,18 +53,15 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Di sistem prototipe ini, kita set user pertama sebagai admin secara otomatis
-      // atau set admin: true untuk memudahkan pengujian Anda.
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         uid: userCredential.user.uid,
         email: email,
         name: name || 'Admin User',
-        admin: true, // Set true agar Anda bisa langsung masuk
+        admin: true,
         createdAt: new Date().toISOString()
       });
 
-      toast({ title: "Akun Dibuat", description: "Akun admin berhasil didaftarkan. Silakan login." });
-      // Pindah ke tab login atau langsung masuk
+      toast({ title: "Akun Dibuat", description: "Akun admin berhasil didaftarkan." });
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Pendaftaran Gagal", description: error.message });
@@ -76,14 +71,16 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth || !db) return;
+    if (!auth || !db) {
+      toast({ variant: "destructive", title: "Error", description: "Firebase belum terinisialisasi." });
+      return;
+    }
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
       const userDoc = await getDoc(doc(db, 'users', result.user.uid));
       
       if (!userDoc.exists()) {
-        // Jika belum ada, buat profile (default admin untuk demo)
         await setDoc(doc(db, 'users', result.user.uid), {
           uid: result.user.uid,
           email: result.user.email,
@@ -95,7 +92,14 @@ export default function LoginPage() {
       
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Google Login Gagal", description: error.message });
+      console.error("Google Login Error:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Google Login Gagal", 
+        description: error.message.includes('auth/api-key-not-valid') 
+          ? "API Key Firebase tidak valid. Periksa konfigurasi di .env" 
+          : error.message 
+      });
     }
   };
 
@@ -232,8 +236,7 @@ export default function LoginPage() {
 
         <footer className="text-center">
           <p className="text-[0.55rem] text-muted-foreground italic leading-relaxed">
-            Hanya administrator yang dapat mengakses data riset dan publikasi.<br/>
-            Keamanan sistem dipantau secara real-time.
+            Hanya administrator yang dapat mengakses data riset dan publikasi.
           </p>
         </footer>
       </div>

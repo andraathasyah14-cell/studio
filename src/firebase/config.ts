@@ -1,7 +1,8 @@
 'use client';
 
 // Konfigurasi ini menggunakan variabel lingkungan Next.js.
-// Pastikan variabel NEXT_PUBLIC_FIREBASE_... telah diatur di Firebase Console atau file .env.
+// Jika Google Login gagal dengan 'invalid-api-key', pastikan NEXT_PUBLIC_FIREBASE_API_KEY 
+// di file .env sudah diisi dengan benar dari Firebase Console.
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "andra-ngelantur.firebaseapp.com",
