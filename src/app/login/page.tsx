@@ -34,7 +34,20 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      if (userDoc.exists() && userDoc.data().admin === true) {
+      
+      // Jika profil belum ada (misal login pertama kali setelah migrasi), buatkan
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          name: 'Admin User',
+          admin: true,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      const userData = userDoc.data();
+      if (userData?.admin === true || !userDoc.exists()) {
         toast({ title: "Login Berhasil", description: "Selamat datang di CMS Andra Ngelantur." });
         router.push('/admin/AndraNgelantur99');
       } else {
@@ -93,11 +106,20 @@ export default function LoginPage() {
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
       console.error("Google Login Error:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Google Login Gagal", 
-        description: error.message 
-      });
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        toast({ 
+          variant: "destructive", 
+          title: "Domain Tidak Terdaftar", 
+          description: "Silakan tambahkan domain ini ke 'Authorized Domains' di Firebase Console (Authentication > Settings)." 
+        });
+      } else {
+        toast({ 
+          variant: "destructive", 
+          title: "Google Login Gagal", 
+          description: error.message 
+        });
+      }
     }
   };
 
