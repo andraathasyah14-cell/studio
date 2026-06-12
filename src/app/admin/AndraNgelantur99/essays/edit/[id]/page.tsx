@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useFirestore, useDoc } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { useFirestore, useDoc, useUser } from '@/firebase';
+import { doc, updateDoc, addDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +18,7 @@ export default function EditEssayPage() {
   const params = useParams();
   const id = params.id as string;
   const db = useFirestore();
+  const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -53,16 +54,24 @@ export default function EditEssayPage() {
   };
 
   const handleUpdate = async (status: 'draft' | 'published') => {
-    if (!db || !id) return;
+    if (!db || !id || !user) return;
     setSaving(true);
     try {
+      const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
       await updateDoc(doc(db, 'essays', id), {
         title,
         content,
         category,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        tags: tagList,
         status,
         updatedAt: new Date().toISOString(),
+      });
+
+      // Log activity
+      await addDoc(collection(db, 'activity_logs'), {
+        adminId: user.uid,
+        action: `Memperbarui esai: ${title}`,
+        timestamp: new Date().toISOString()
       });
 
       toast({

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -47,16 +48,24 @@ export default function NewEssayPage() {
 
     setSaving(true);
     try {
+      const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
       await addDoc(collection(db, 'essays'), {
         title,
         content,
         category,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        tags: tagList,
         status,
         authorId: user.uid,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         confidence: 70,
+      });
+
+      // Log activity
+      await addDoc(collection(db, 'activity_logs'), {
+        adminId: user.uid,
+        action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
+        timestamp: new Date().toISOString()
       });
 
       toast({
