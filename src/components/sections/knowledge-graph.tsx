@@ -1,27 +1,47 @@
+
 'use client';
 
-import { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import Link from "next/link";
-
-const nodes = [
-  { id: 0, label: 'Bonus Demografi', x: 50, y: 45 },
-  { id: 1, label: 'Industrialisasi', x: 28, y: 28 },
-  { id: 2, label: 'Pendidikan', x: 72, y: 25 },
-  { id: 3, label: 'Middle Income Trap', x: 20, y: 60 },
-  { id: 4, label: 'Investasi Asing', x: 40, y: 72 },
-  { id: 5, label: 'AI & Pekerjaan', x: 75, y: 62 },
-  { id: 6, label: 'Produktivitas', x: 62, y: 78 },
-  { id: 7, label: 'Hukum & Ketimpangan', x: 84, y: 42 },
-  { id: 8, label: 'Reforma Agraria', x: 15, y: 80 },
-];
-
-const edges = [
-  [0,1],[0,2],[0,3],[0,4],[0,5],
-  [1,3],[2,5],[5,6],[5,7],[3,8],[4,6]
-];
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function KnowledgeGraph() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const db = useFirestore();
+  const { data: essays } = useCollection(collection(db, 'essays'));
+
+  // Ambil semua tag unik dari esai
+  const nodes = useMemo(() => {
+    const allTags = new Set<string>();
+    essays?.forEach(e => e.tags?.forEach((t: string) => allTags.add(t)));
+    
+    // Fallback nodes if empty
+    if (allTags.size === 0) {
+      return [
+        { id: 0, label: 'Bonus Demografi', x: 50, y: 45 },
+        { id: 1, label: 'Industrialisasi', x: 28, y: 28 },
+        { id: 2, label: 'Pendidikan', x: 72, y: 25 },
+        { id: 3, label: 'Ekonomi', x: 20, y: 60 }
+      ];
+    }
+
+    return Array.from(allTags).slice(0, 10).map((tag, i) => ({
+      id: i,
+      label: tag,
+      x: 15 + Math.random() * 70,
+      y: 15 + Math.random() * 70
+    }));
+  }, [essays]);
+
+  const edges = useMemo(() => {
+    const pairs: [number, number][] = [];
+    for (let i = 0; i < nodes.length - 1; i++) {
+      if (Math.random() > 0.5) pairs.push([i, i + 1]);
+      if (i > 0 && Math.random() > 0.7) pairs.push([0, i]);
+    }
+    return pairs;
+  }, [nodes]);
 
   return (
     <section className="py-20 px-6 border-b border-border">
@@ -38,10 +58,10 @@ export default function KnowledgeGraph() {
           {edges.map(([a, b], i) => (
             <line
               key={i}
-              x1={`${nodes[a].x}%`}
-              y1={`${nodes[a].y}%`}
-              x2={`${nodes[b].x}%`}
-              y2={`${nodes[b].y}%`}
+              x1={`${nodes[a]?.x}%`}
+              y1={`${nodes[a]?.y}%`}
+              x2={`${nodes[b]?.x}%`}
+              y2={`${nodes[b]?.y}%`}
               stroke="currentColor"
               className="text-muted/20"
               strokeWidth="1"
@@ -64,7 +84,7 @@ export default function KnowledgeGraph() {
         ))}
       </div>
       <p className="text-[0.6rem] text-muted-foreground text-center mt-6 uppercase tracking-widest italic">
-        Klik titik pada graf untuk mengeksplorasi topik terkait
+        Grafik topik yang dibangun dari metadata esai Anda
       </p>
     </section>
   );

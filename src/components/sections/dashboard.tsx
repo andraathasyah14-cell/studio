@@ -1,25 +1,39 @@
+
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { resources } from "@/lib/data";
-import { FileText, Link as LinkIcon, Download, ExternalLink, Database, ArrowRight } from "lucide-react";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { FileText, Link as LinkIcon, Database, ArrowRight } from "lucide-react";
 
 export default function Dashboard() {
   const [activityData, setActivityData] = useState<number[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const db = useFirestore();
+
+  const { data: essays } = useCollection(collection(db, 'essays'));
+  const { data: papers } = useCollection(collection(db, 'papers'));
+  const { data: refs } = useCollection(collection(db, 'references'));
+
+  const recentRefsQuery = useMemo(() => query(collection(db, 'references'), limit(3)), [db]);
+  const { data: recentResources } = useCollection(recentRefsQuery);
 
   useEffect(() => {
-    // Generate random activity data only on the client to avoid hydration mismatch
     const data = Array.from({ length: 30 }, () => Math.floor(Math.random() * 100));
     setActivityData(data);
     setIsMounted(true);
   }, []);
 
   const max = activityData.length > 0 ? Math.max(...activityData) : 1;
-  
-  // Ambil 3 sumber daya terbaru saja untuk pratinjau
-  const recentResources = resources.slice(0, 3);
+
+  const stats = {
+    essays: essays?.length || 0,
+    papers: papers?.length || 0,
+    books: refs?.filter(r => r.category?.toLowerCase().includes('buku')).length || 0,
+    datasets: refs?.filter(r => r.category?.toLowerCase().includes('data')).length || 0,
+    revisions: 0
+  };
 
   return (
     <section id="dashboard" className="py-20 px-6 border-b border-border">
@@ -28,16 +42,14 @@ export default function Dashboard() {
         <div className="h-px w-full bg-border" />
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-border border border-border mb-12 overflow-hidden">
-        <StatCell value="43" label="Tulisan" />
-        <StatCell value="286" label="Paper" />
-        <StatCell value="21" label="Buku" />
-        <StatCell value="5" label="Dataset" />
-        <StatCell value="11" label="Revisi" />
+        <StatCell value={stats.essays.toString()} label="Tulisan" />
+        <StatCell value={stats.papers.toString()} label="Paper" />
+        <StatCell value={stats.books.toString()} label="Buku" />
+        <StatCell value={stats.datasets.toString()} label="Dataset" />
+        <StatCell value={stats.revisions.toString()} label="Revisi" />
       </div>
 
-      {/* Recent Resources Preview */}
       <div className="mb-16">
         <div className="flex justify-between items-end mb-6">
           <h3 className="font-display text-sm font-semibold uppercase tracking-widest text-white">Referensi Terbaru</h3>
@@ -47,30 +59,35 @@ export default function Dashboard() {
         </div>
         
         <div className="grid grid-cols-1 gap-px bg-border border border-border">
-          {recentResources.map((res, i) => (
+          {recentResources?.map((res: any, i: number) => (
             <div key={i} className="bg-background p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <ResourceIcon type={res.type} />
-                  <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{res.category} {res.year && `· ${res.year}`}</span>
+                  <ResourceIcon type={res.type || 'web'} />
+                  <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{res.category}</span>
                 </div>
                 <h4 className="font-display text-[0.85rem] font-medium text-white group-hover:text-primary transition-colors">
                   {res.title}
                 </h4>
               </div>
-              <Link 
+              <a 
                 href={res.link} 
                 target="_blank" 
+                rel="noopener noreferrer"
                 className="text-[0.6rem] uppercase tracking-widest text-muted-foreground hover:text-white border border-border px-3 py-1.5"
               >
                 Lihat
-              </Link>
+              </a>
             </div>
           ))}
+          {recentResources?.length === 0 && (
+            <div className="bg-background p-10 text-center text-[0.7rem] italic text-muted-foreground">
+              Belum ada referensi yang ditambahkan.
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Activity Graph */}
       <div className="space-y-4">
         <div className="h-20 flex items-end gap-1 px-4">
           {isMounted && activityData.map((v, i) => (
@@ -85,9 +102,6 @@ export default function Dashboard() {
               <div className="w-full h-full bg-muted-foreground/10 group-hover:bg-muted-foreground/30 transition-colors" />
             </div>
           ))}
-          {!isMounted && Array.from({ length: 30 }).map((_, i) => (
-            <div key={i} className="flex-1 bg-muted/20 h-4" />
-          ))}
         </div>
         <p className="text-[0.6rem] text-muted-foreground tracking-widest text-center uppercase">
           Grafik Aktivitas · 30 hari terakhir
@@ -97,12 +111,11 @@ export default function Dashboard() {
   );
 }
 
-function ResourceIcon({ type }: { type: 'paper' | 'web' | 'dataset' | 'book' }) {
+function ResourceIcon({ type }: { type: string }) {
   switch (type) {
     case 'paper': return <FileText className="w-3 h-3 text-muted-foreground" />;
-    case 'web': return <LinkIcon className="w-3 h-3 text-muted-foreground" />;
     case 'dataset': return <Database className="w-3 h-3 text-muted-foreground" />;
-    default: return <FileText className="w-3 h-3 text-muted-foreground" />;
+    default: return <LinkIcon className="w-3 h-3 text-muted-foreground" />;
   }
 }
 
