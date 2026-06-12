@@ -3,9 +3,8 @@
 
 import React from 'react';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, where, orderBy, limit } from 'firebase/firestore';
-import { FileText, BookOpen, Clock, AlertCircle, TrendingUp, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { FileText, BookOpen, Clock, AlertCircle, TrendingUp, CheckCircle2, Library } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
@@ -21,6 +20,11 @@ export default function AdminDashboard() {
     return collection(db, 'papers');
   }, [db]);
 
+  const referencesQuery = React.useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'references');
+  }, [db]);
+
   const recentActivityQuery = React.useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'), limit(5));
@@ -28,6 +32,7 @@ export default function AdminDashboard() {
 
   const { data: essays, loading: essaysLoading } = useCollection(essaysQuery);
   const { data: papers, loading: papersLoading } = useCollection(papersQuery);
+  const { data: refs, loading: refsLoading } = useCollection(referencesQuery);
   const { data: logs, loading: logsLoading } = useCollection(recentActivityQuery);
 
   const stats = {
@@ -35,6 +40,7 @@ export default function AdminDashboard() {
     published: essays?.filter(e => e.status === 'published').length || 0,
     drafts: essays?.filter(e => e.status === 'draft').length || 0,
     totalPapers: papers?.length || 0,
+    totalRefs: refs?.length || 0,
     scheduled: essays?.filter(e => e.status === 'scheduled').length || 0,
   };
 
@@ -60,14 +66,14 @@ export default function AdminDashboard() {
           loading={papersLoading}
         />
         <StatItem 
-          label="Draft Sedang Ditulis" 
-          value={stats.drafts} 
-          icon={<Clock className="w-4 h-4" />} 
-          loading={essaysLoading}
+          label="Bank Referensi" 
+          value={stats.totalRefs} 
+          icon={<Library className="w-4 h-4" />} 
+          loading={refsLoading}
         />
         <StatItem 
-          label="Jadwal Tayang" 
-          value={stats.scheduled} 
+          label="Status Terbit" 
+          value={stats.published} 
           icon={<TrendingUp className="w-4 h-4" />} 
           loading={essaysLoading}
         />
@@ -89,7 +95,7 @@ export default function AdminDashboard() {
               ))
             ) : logs?.length === 0 ? (
               <div className="p-10 text-center text-muted-foreground text-sm italic font-serif">
-                Belum ada aktivitas yang tercatat.
+                Belum ada aktivitas yang tercatat. Silakan buat konten baru untuk memulai.
               </div>
             ) : (
               logs?.map((log, i) => (
@@ -126,7 +132,7 @@ export default function AdminDashboard() {
               />
             </div>
             <p className="text-[0.6rem] italic text-muted-foreground leading-relaxed">
-              Target bulanan: 4 Esai berkualitas tinggi dengan dukungan minimal 5 paper akademik per esai.
+              Database saat ini kosong. Angka yang Anda lihat di website utama sebelum login adalah data dummy. Mulailah menulis untuk mengisi dasbor ini.
             </p>
           </div>
         </div>
