@@ -35,7 +35,6 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       
-      // Jika profil belum ada (misal login pertama kali setelah migrasi), buatkan
       if (!userDoc.exists()) {
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           uid: userCredential.user.uid,
@@ -108,10 +107,11 @@ export default function LoginPage() {
       console.error("Google Login Error:", error);
       
       if (error.code === 'auth/unauthorized-domain') {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'domain ini';
         toast({ 
           variant: "destructive", 
           title: "Domain Tidak Terdaftar", 
-          description: "Silakan tambahkan domain ini ke 'Authorized Domains' di Firebase Console (Authentication > Settings)." 
+          description: `Harap tambahkan domain "${domain}" ke 'Authorized Domains' di Firebase Console (Authentication > Settings).` 
         });
       } else {
         toast({ 
