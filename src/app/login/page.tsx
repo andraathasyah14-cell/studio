@@ -13,7 +13,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Key, Mail, ShieldCheck, LogIn, AlertCircle, Copy } from 'lucide-react';
+import { Key, Mail, ShieldCheck, LogIn, AlertCircle, Copy, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,32 +23,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [unauthorizedDomain, setUnauthorizedDomain] = useState<string | null>(null);
+  const [currentDomain, setCurrentDomain] = useState('');
   
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentDomain(window.location.hostname);
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
     setLoading(true);
-    setUnauthorizedDomain(null);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      
-      if (!userDoc.exists()) {
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-          uid: userCredential.user.uid,
-          email: userCredential.user.email,
-          name: 'Admin User',
-          admin: true,
-          createdAt: new Date().toISOString()
-        });
-      }
-
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
       toast({ variant: "destructive", title: "Login Gagal", description: "Email atau kata sandi salah." });
@@ -82,7 +75,6 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     if (!auth || !db) return;
-    setUnauthorizedDomain(null);
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -100,20 +92,19 @@ export default function LoginPage() {
       
       router.push('/admin/AndraNgelantur99');
     } catch (error: any) {
-      if (error.code === 'auth/unauthorized-domain') {
-        const domain = window.location.hostname;
-        setUnauthorizedDomain(domain);
-      } else {
-        toast({ variant: "destructive", title: "Gagal", description: error.message });
-      }
+      toast({ 
+        variant: "destructive", 
+        title: "Google Login Gagal", 
+        description: error.code === 'auth/unauthorized-domain' 
+          ? "Domain belum terdaftar di Firebase Console." 
+          : error.message 
+      });
     }
   };
 
   const copyDomain = () => {
-    if (unauthorizedDomain) {
-      navigator.clipboard.writeText(unauthorizedDomain);
-      toast({ title: "Tersalin!", description: "Domain telah disalin ke clipboard." });
-    }
+    navigator.clipboard.writeText(currentDomain);
+    toast({ title: "Tersalin!", description: "Domain telah disalin ke clipboard." });
   };
 
   return (
@@ -129,15 +120,15 @@ export default function LoginPage() {
           <p className="text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground">Andra Ngelantur CMS</p>
         </header>
 
-        {unauthorizedDomain && (
-          <Alert variant="destructive" className="rounded-none border-rose-500 bg-rose-500/10">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="text-[0.7rem] uppercase tracking-widest font-bold">Domain Tidak Terdaftar</AlertTitle>
-            <AlertDescription className="text-[0.75rem] leading-relaxed mt-2">
-              Salin domain di bawah ini dan masukkan ke <strong>Firebase Console > Authentication > Settings > Authorized Domains</strong>:
-              <div className="flex items-center gap-2 mt-3 p-2 bg-black/50 border border-rose-500/20">
-                <code className="flex-1 font-mono text-[0.65rem] truncate">{unauthorizedDomain}</code>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyDomain}>
+        {currentDomain && !currentDomain.includes('localhost') && (
+          <Alert className="rounded-none border-blue-500 bg-blue-500/10">
+            <Globe className="h-4 w-4 text-blue-400" />
+            <AlertTitle className="text-[0.7rem] uppercase tracking-widest font-bold text-blue-400">Info Domain Authorized</AlertTitle>
+            <AlertDescription className="text-[0.75rem] leading-relaxed mt-2 text-blue-200/80">
+              Salin domain ini dan masukkan ke <strong>Firebase Console > Authentication > Settings > Authorized Domains</strong> agar Google Login berfungsi:
+              <div className="flex items-center gap-2 mt-3 p-2 bg-black/50 border border-blue-500/20">
+                <code className="flex-1 font-mono text-[0.65rem] truncate text-white">{currentDomain}</code>
+                <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-white/10" onClick={copyDomain}>
                   <Copy className="h-3 w-3" />
                 </Button>
               </div>
