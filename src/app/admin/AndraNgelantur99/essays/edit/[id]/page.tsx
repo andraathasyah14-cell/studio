@@ -13,6 +13,8 @@ import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { improveEssayAction } from '@/app/actions';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function EditEssayPage() {
   const params = useParams();
@@ -75,45 +77,42 @@ export default function EditEssayPage() {
     if (!db || !id || !user) return;
     setSaving(true);
     
-    const { dismiss } = toast({
-      title: "Memperbarui Esai...",
-      description: "Sinkronisasi perubahan ke server.",
+    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    const updateData = {
+      title,
+      content,
+      category,
+      tags: tagList,
+      status,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const docRef = doc(db, 'essays', id);
+    // NO await here for instant optimistic update
+    updateDoc(docRef, updateData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+
+    // Log activity (fire and forget)
+    addDoc(collection(db, 'activity_logs'), {
+      adminId: user.uid,
+      action: `Memperbarui esai: ${title}`,
+      timestamp: new Date().toISOString()
     });
 
-    try {
-      const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
-      const updateData = {
-        title,
-        content,
-        category,
-        tags: tagList,
-        status,
-        updatedAt: new Date().toISOString(),
-      };
-
-      updateDoc(doc(db, 'essays', id), updateData)
-        .catch(err => {
-          toast({ variant: "destructive", title: "Gagal memperbarui", description: err.message });
-        });
-
-      // Log activity
-      await addDoc(collection(db, 'activity_logs'), {
-        adminId: user.uid,
-        action: `Memperbarui esai: ${title}`,
-        timestamp: new Date().toISOString()
-      });
-
-      dismiss();
-      toast({
-        title: "Pembaruan Berhasil",
-        description: `Esai "${title}" berhasil diperbarui.`,
-      });
-      router.push('/admin/AndraNgelantur99/essays');
-    } catch (error: any) {
-      setSaving(false);
-      dismiss();
-      toast({ variant: "destructive", title: "Gagal memperbarui", description: error.message });
-    }
+    toast({
+      title: "Pembaruan Berhasil",
+      description: `Perubahan pada "${title}" sedang diproses.`,
+    });
+    
+    // Immediate redirect
+    router.push('/admin/AndraNgelantur99/essays');
   };
 
   if (loading) return <div className="p-20 text-center uppercase tracking-widest text-[0.6rem]">Memuat Esai...</div>;
@@ -151,7 +150,7 @@ export default function EditEssayPage() {
             className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9 min-w-[120px]"
           >
             {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
-            {saving ? 'Menyimpan...' : 'Simpan Draft'}
+            {saving ? 'Proses...' : 'Simpan Draft'}
           </Button>
           <Button 
             size="sm" 

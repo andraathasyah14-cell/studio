@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { improveEssayAction } from '@/app/actions';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function NewEssayPage() {
   const [title, setTitle] = useState('');
@@ -66,51 +68,48 @@ export default function NewEssayPage() {
 
     setSaving(true);
     
-    // Menampilkan toast loading sementara
-    const { dismiss } = toast({
-      title: status === 'published' ? "Menerbitkan Konten..." : "Menyimpan Draf...",
-      description: "Sedang mensinkronisasi data ke database.",
+    const essayData = {
+      title,
+      content,
+      category,
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      status,
+      authorId: user.uid,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      confidence: 70,
+    };
+
+    // NO await here for instant optimistic update
+    const essayRef = collection(db, 'essays');
+    addDoc(essayRef, essayData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: essayRef.path,
+          operation: 'create',
+          requestResourceData: essayData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+
+    const logRef = collection(db, 'activity_logs');
+    const logData = {
+      adminId: user.uid,
+      action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
+      timestamp: new Date().toISOString()
+    };
+    addDoc(logRef, logData)
+      .catch(async () => {
+        // Silent error for logs
+      });
+
+    toast({
+      title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
+      description: `Esai "${title}" sedang diproses di latar belakang.`,
     });
-
-    try {
-      const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
-      const essayData = {
-        title,
-        content,
-        category,
-        tags: tagList,
-        status,
-        authorId: user.uid,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        confidence: 70,
-      };
-
-      // Firestore write (mengikuti aturan no await untuk mutasi instan)
-      addDoc(collection(db, 'essays'), essayData)
-        .catch((err) => {
-          console.error(err);
-          toast({ variant: "destructive", title: "Gagal menyimpan", description: err.message });
-        });
-
-      await addDoc(collection(db, 'activity_logs'), {
-        adminId: user.uid,
-        action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
-        timestamp: new Date().toISOString()
-      });
-
-      dismiss();
-      toast({
-        title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
-        description: `Esai "${title}" kini sudah tersinkronisasi di server.`,
-      });
-      
-      router.push('/admin/AndraNgelantur99/essays');
-    } catch (error: any) {
-      setSaving(false);
-      dismiss();
-      toast({ variant: "destructive", title: "Gagal menyimpan", description: error.message });
-    }
+    
+    // Immediate redirect
+    router.push('/admin/AndraNgelantur99/essays');
   };
 
   return (
