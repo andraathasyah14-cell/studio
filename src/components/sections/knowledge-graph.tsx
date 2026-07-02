@@ -1,155 +1,161 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
-import Link from "next/link";
+import React, { useMemo } from 'react';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid 
+} from 'recharts';
+import { LayoutGrid, PieChart as PieIcon, BarChart3 } from 'lucide-react';
 
-export default function KnowledgeGraph() {
-  const containerRef = useRef<HTMLDivElement>(null);
+export default function TopicDistribution() {
   const db = useFirestore();
 
-  // Hanya ambil esai yang sudah diterbitkan
+  // Ambil esai yang sudah diterbitkan saja
   const essaysQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'essays'), where('status', '==', 'published'));
   }, [db]);
 
-  const { data: essays } = useCollection(essaysQuery);
+  const { data: essays, loading } = useCollection(essaysQuery);
 
-  // 1. MENGHITUNG FREKUENSI TAG & MEMBENTUK TITIK (NODES)
-  const nodes = useMemo(() => {
-    const tagCounts = new Map<string, number>();
+  // 1. Menghitung distribusi tag/topik
+  const topicData = useMemo(() => {
+    if (!essays) return [];
     
-    essays?.forEach(e => {
-      e.tags?.forEach((t: string) => {
-        const tag = t.toLowerCase().trim();
-        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    const counts: Record<string, number> = {};
+    essays.forEach(essay => {
+      essay.tags?.forEach((tag: string) => {
+        const normalizedTag = tag.toLowerCase().trim();
+        counts[normalizedTag] = (counts[normalizedTag] || 0) + 1;
       });
     });
-    
-    // Jika tidak ada data, tampilkan placeholder
-    if (tagCounts.size === 0) {
-      return [
-        { id: 0, label: 'ekonomi', x: 50, y: 45, size: 10 },
-        { id: 1, label: 'pendidikan', x: 28, y: 28, size: 8 },
-        { id: 2, label: 'teknologi', x: 72, y: 25, size: 12 },
-        { id: 3, label: 'hukum', x: 20, y: 60, size: 6 }
-      ];
-    }
 
-    // Tentukan ukuran berdasarkan frekuensi
-    // Fungsi hash sederhana agar posisi (x,y) stabil berdasarkan nama tag
-    const getStablePos = (str: string) => {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return Math.abs(hash);
-    };
-
-    return Array.from(tagCounts.entries()).map(([tag, count], i) => {
-      const stableSeed = getStablePos(tag);
-      return {
-        id: i,
-        label: tag,
-        count,
-        // Ukuran titik: dasar 6px + (frekuensi * 4px), maks 30px
-        size: Math.min(6 + (count * 4), 30),
-        x: 15 + (stableSeed % 70), // Posisi stabil berdasarkan nama
-        y: 15 + ((stableSeed >> 7) % 70)
-      };
-    });
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }, [essays]);
 
-  // 2. MEMBENTUK GARIS (EDGES) BERDASARKAN CO-OCCURRENCE
-  const edges = useMemo(() => {
-    const pairs: [number, number][] = [];
-    if (!essays || nodes.length <= 1) return pairs;
+  const COLORS = ['#FFFFFF', '#A1A1AA', '#71717A', '#52525B', '#3F3F46', '#27272A'];
 
-    const tagToId = new Map(nodes.map(n => [n.label, n.id]));
-    const connections = new Set<string>();
-
-    essays.forEach(essay => {
-      const essayTags = essay.tags?.map((t: string) => t.toLowerCase().trim()) || [];
-      
-      for (let i = 0; i < essayTags.length; i++) {
-        for (let j = i + 1; j < essayTags.length; j++) {
-          const idA = tagToId.get(essayTags[i]);
-          const idB = tagToId.get(essayTags[j]);
-          
-          if (idA !== undefined && idB !== undefined) {
-            const pairKey = [idA, idB].sort().join('-');
-            if (!connections.has(pairKey)) {
-              connections.add(pairKey);
-              pairs.push([idA, idB]);
-            }
-          }
-        }
-      }
-    });
-
-    return pairs;
-  }, [nodes, essays]);
+  if (loading) return (
+    <div className="py-20 px-6 text-center text-[0.6rem] uppercase tracking-widest text-muted-foreground animate-pulse">
+      Menganalisis Sebaran Topik...
+    </div>
+  );
 
   return (
-    <section className="py-20 px-6 border-b border-border">
-      <div className="flex items-center gap-4 mb-12">
-        <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground whitespace-nowrap">Knowledge Graph</span>
+    <section className="py-24 px-6 border-b border-border">
+      <div className="flex items-center gap-4 mb-16">
+        <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground whitespace-nowrap">Distribusi Pengetahuan</span>
         <div className="h-px w-full bg-border" />
       </div>
 
-      <div 
-        ref={containerRef}
-        className="relative h-[500px] w-full bg-card/30 border border-border overflow-hidden cursor-crosshair group/graph"
-      >
-        {/* Layer Garis Hubungan */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          {edges.map(([a, b], i) => (
-            <line
-              key={i}
-              x1={`${nodes[a]?.x}%`}
-              y1={`${nodes[a]?.y}%`}
-              x2={`${nodes[b]?.x}%`}
-              y2={`${nodes[b]?.y}%`}
-              stroke="currentColor"
-              className="text-white/5 group-hover/graph:text-white/15 transition-colors"
-              strokeWidth="1"
-            />
-          ))}
-        </svg>
-
-        {/* Layer Titik Topik */}
-        {nodes.map(node => (
-          <Link
-            key={node.id}
-            href={`/topik/${encodeURIComponent(node.label)}`}
-            className="absolute group -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
-            style={{ left: `${node.x}%`, top: `${node.y}%` }}
-          >
-            {/* Titik dengan ukuran dinamis */}
-            <div 
-              className="rounded-full bg-white/20 group-hover:bg-white group-hover:scale-110 transition-all duration-500 flex items-center justify-center relative"
-              style={{ 
-                width: `${node.size}px`, 
-                height: `${node.size}px`,
-                boxShadow: node.count > 2 ? '0 0 15px rgba(255,255,255,0.3)' : 'none'
-              }}
-            >
-              {/* Tooltip Label yang muncul saat hover atau untuk node besar */}
-              <span className={`absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap font-display text-[0.5rem] uppercase tracking-widest transition-all pointer-events-none
-                ${node.count > 3 ? 'opacity-60 text-white' : 'opacity-0 group-hover:opacity-100 text-muted-foreground'}
-              `}>
-                {node.label}
-              </span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-border border border-border">
+        {/* Panel 1: Pie Chart - Komposisi Topik */}
+        <div className="bg-background p-8 space-y-8 flex flex-col justify-center border-r border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <PieIcon className="w-3.5 h-3.5 text-muted-foreground" />
+            <h3 className="text-[0.65rem] uppercase tracking-widest font-bold text-white">Komposisi Fokus Riset</h3>
+          </div>
+          
+          <div className="h-[280px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={topicData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {topicData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#000', border: '1px solid #27272A', fontSize: '10px', textTransform: 'uppercase' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Legend Sederhana */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <span className="text-[0.55rem] uppercase tracking-[0.3em] text-muted-foreground font-bold">Topik</span>
             </div>
-          </Link>
-        ))}
+          </div>
 
-        {/* Info Petunjuk */}
-        <div className="absolute bottom-4 right-4 text-[0.5rem] uppercase tracking-widest text-muted-foreground/30 font-bold pointer-events-none space-y-1 text-right">
-          <p>Garis: Koneksi antar topik dalam satu esai</p>
-          <p>Ukuran: Intensitas pembahasan topik</p>
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            {topicData.slice(0, 4).map((item, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-2 h-2" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground truncate">{item.name} ({item.value})</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Panel 2: Bar Chart - Intensitas Topik */}
+        <div className="bg-background p-8 space-y-8">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+            <h3 className="text-[0.65rem] uppercase tracking-widest font-bold text-white">Peringkat Pembahasan</h3>
+          </div>
+
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topicData.slice(0, 6)} layout="vertical" margin={{ left: -20, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#27272A" />
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#71717A', fontSize: 10, textTransform: 'uppercase' }} 
+                  width={80}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-black border border-border p-2 text-[0.6rem] uppercase tracking-widest font-bold">
+                          {payload[0].value} Tulisan
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="value" fill="#FFFFFF" radius={[0, 2, 2, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <p className="text-[0.6rem] italic text-muted-foreground leading-relaxed">
+            Data ini menunjukkan topik mana yang paling dominan dalam repositori pengetahuan Anda saat ini.
+          </p>
+        </div>
+      </div>
+      
+      {/* Footer Info */}
+      <div className="mt-8 flex justify-center">
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-display font-bold text-white">{topicData.length}</span>
+            <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Total Topik Unik</span>
+          </div>
+          <div className="w-px h-8 bg-border" />
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-display font-bold text-white">
+              {topicData.reduce((acc, curr) => acc + curr.value, 0)}
+            </span>
+            <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Total Kaitan Topik</span>
+          </div>
         </div>
       </div>
     </section>
