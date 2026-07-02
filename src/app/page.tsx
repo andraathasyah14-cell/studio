@@ -12,15 +12,26 @@ import About from '@/components/sections/about';
 import Footer from '@/components/layout/footer';
 
 export default function Home() {
-  const [isEntered, setIsEntered] = useState(false);
+  const [isEntered, setIsEntered] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Cek apakah user sudah masuk sebelumnya di sesi ini
+    const savedEntry = sessionStorage.getItem('andra_ngelantur_entered');
+    setIsEntered(savedEntry === 'true');
+  }, []);
+
+  useEffect(() => {
+    if (isEntered === null) return;
+    
     if (!isEntered) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
+      sessionStorage.setItem('andra_ngelantur_entered', 'true');
     }
   }, [isEntered]);
+
+  if (isEntered === null) return <div className="min-h-screen bg-background" />;
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-white selection:text-black">

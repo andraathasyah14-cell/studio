@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ANALYSIS_TEMPLATES } from '@/lib/analysis-templates';
 import {
   Accordion,
@@ -33,6 +32,24 @@ interface AnalysisFormProps {
 export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('none');
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load saved answers from localStorage on mount
+  useEffect(() => {
+    const savedAnswers = localStorage.getItem('andra_analysis_answers');
+    const savedTemplate = localStorage.getItem('andra_analysis_template');
+    if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
+    if (savedTemplate) setSelectedTemplateKey(savedTemplate);
+    setIsInitialized(true);
+  }, []);
+
+  // Save answers to localStorage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('andra_analysis_answers', JSON.stringify(answers));
+      localStorage.setItem('andra_analysis_template', selectedTemplateKey);
+    }
+  }, [answers, selectedTemplateKey, isInitialized]);
 
   const activeTemplate = selectedTemplateKey !== 'none' ? ANALYSIS_TEMPLATES[selectedTemplateKey] : null;
 
@@ -67,7 +84,6 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const handleGenerateDraft = () => {
     if (!activeTemplate) return;
     
-    // LOGIKA JAWABAN MURNI: Mengambil HANYA teks jawaban dari user.
     const pureAnswers = activeTemplate.sections
       .flatMap(section => 
         section.questions
@@ -85,8 +101,11 @@ export default function AnalysisForm({ onInsertDraft }: AnalysisFormProps) {
   const handleReset = () => {
     if (window.confirm('Bersihkan semua jawaban form?')) {
       setAnswers({});
+      localStorage.removeItem('andra_analysis_answers');
     }
   };
+
+  if (!isInitialized) return null;
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border selection:bg-white selection:text-black">

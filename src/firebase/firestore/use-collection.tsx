@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   onSnapshot,
   Query,
@@ -14,6 +14,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const queryRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!query) {
@@ -21,12 +22,17 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
       return;
     }
 
+    // Hindari re-subscribe jika string query sama (stabilitas ekstra)
+    const currentQueryStr = JSON.stringify((query as any)._query || query.toString());
+    if (queryRef.current === currentQueryStr) return;
+    queryRef.current = currentQueryStr;
+
     setLoading(true);
     const unsubscribe = onSnapshot(
       query,
       (snapshot: QuerySnapshot<T>) => {
         const docs = snapshot.docs.map((doc) => ({
-          ...doc.data(),
+          ...(doc.data() as any),
           id: doc.id,
         }));
         setData(docs);
@@ -43,7 +49,10 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      queryRef.current = null;
+    };
   }, [query]);
 
   return { data, loading, error };
