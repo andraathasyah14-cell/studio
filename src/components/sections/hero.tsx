@@ -1,16 +1,21 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
 export default function Hero() {
   const db = useFirestore();
   
-  const { data: essays } = useCollection(collection(db, 'essays'));
-  const { data: papers } = useCollection(collection(db, 'papers'));
-  const { data: refs } = useCollection(collection(db, 'references'));
+  // Memoisasi query untuk mencegah infinite render loop
+  const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
+  const papersQuery = useMemo(() => db ? collection(db, 'papers') : null, [db]);
+  const refsQuery = useMemo(() => db ? collection(db, 'references') : null, [db]);
+
+  const { data: essays } = useCollection(essaysQuery);
+  const { data: papers } = useCollection(papersQuery);
+  const { data: refs } = useCollection(refsQuery);
 
   const statsCount = {
     essays: essays?.length || 0,
