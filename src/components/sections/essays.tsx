@@ -3,21 +3,30 @@
 
 import React from 'react';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import Link from "next/link";
 
 export default function Essays() {
   const db = useFirestore();
+  
+  // Sederhanakan query untuk menghindari kebutuhan indeks komposit manual yang sering gagal di prototype
   const essaysQuery = React.useMemo(() => {
     if (!db) return null;
     return query(
       collection(db, 'essays'), 
-      where('status', '==', 'published'),
-      orderBy('updatedAt', 'desc')
+      where('status', '==', 'published')
     );
   }, [db]);
 
   const { data: essays, loading } = useCollection(essaysQuery);
+
+  // Urutkan secara manual di memori agar tetap rapi tanpa indeks komposit
+  const sortedEssays = React.useMemo(() => {
+    if (!essays) return [];
+    return [...essays].sort((a: any, b: any) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+  }, [essays]);
 
   if (loading) return (
     <div className="py-20 px-6 text-center text-[0.6rem] uppercase tracking-widest text-muted-foreground">
@@ -33,8 +42,8 @@ export default function Essays() {
       </div>
 
       <div className="divide-y divide-border">
-        {essays && essays.length > 0 ? (
-          essays.map((essay, i) => (
+        {sortedEssays && sortedEssays.length > 0 ? (
+          sortedEssays.map((essay: any) => (
             <div key={essay.id} className="group py-10 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="md:col-span-3 space-y-4">
                 <Link href={`/essay/${essay.id}`} className="block">

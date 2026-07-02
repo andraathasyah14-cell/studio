@@ -1,14 +1,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Tag, FileText, Wand2, Loader2, ClipboardCheck, X } from 'lucide-react';
+import { ArrowLeft, Tag, FileText, Wand2, Loader2, ClipboardCheck, RotateCcw } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -25,11 +25,29 @@ export default function NewEssayPage() {
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
   const [showMobileTemplate, setShowMobileTemplate] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const db = useFirestore();
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedTitle = localStorage.getItem('andra_draft_title');
+    const savedContent = localStorage.getItem('andra_draft_content');
+    if (savedTitle) setTitle(savedTitle);
+    if (savedContent) setContent(savedContent);
+    setIsInitialized(true);
+  }, []);
+
+  // Save to localStorage
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('andra_draft_title', title);
+      localStorage.setItem('andra_draft_content', content);
+    }
+  }, [title, content, isInitialized]);
 
   const handleAIImprove = async () => {
     if (!content) return;
@@ -58,6 +76,15 @@ export default function NewEssayPage() {
       description: "Jawaban panduan telah dimasukkan ke editor.",
     });
     setShowMobileTemplate(false);
+  };
+
+  const clearDraft = () => {
+    if (window.confirm('Bersihkan seluruh draf penulisan?')) {
+      setTitle('');
+      setContent('');
+      localStorage.removeItem('andra_draft_title');
+      localStorage.removeItem('andra_draft_content');
+    }
   };
 
   const handleSave = (status: 'draft' | 'published') => {
@@ -103,6 +130,10 @@ export default function NewEssayPage() {
       timestamp: new Date().toISOString()
     }).catch(() => {});
 
+    // Clear draft on success
+    localStorage.removeItem('andra_draft_title');
+    localStorage.removeItem('andra_draft_content');
+
     toast({
       title: status === 'published' ? "Terbit" : "Draf Disimpan",
       description: `Esai "${title}" sedang disinkronkan.`,
@@ -110,6 +141,8 @@ export default function NewEssayPage() {
     
     router.push('/admin/AndraNgelantur99/essays');
   };
+
+  if (!isInitialized) return null;
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-background">
@@ -125,6 +158,10 @@ export default function NewEssayPage() {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={clearDraft} className="text-muted-foreground hover:text-white">
+            <RotateCcw className="w-3.5 h-3.5 mr-2" /> Reset
+          </Button>
+
           <Sheet open={showMobileTemplate} onOpenChange={setShowMobileTemplate}>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="lg:hidden border-border text-[0.6rem] uppercase tracking-widest">
