@@ -74,16 +74,27 @@ export default function EditEssayPage() {
   const handleUpdate = async (status: 'draft' | 'published') => {
     if (!db || !id || !user) return;
     setSaving(true);
+    
+    const { dismiss } = toast({
+      title: "Memperbarui Esai...",
+      description: "Sinkronisasi perubahan ke server.",
+    });
+
     try {
       const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
-      await updateDoc(doc(db, 'essays', id), {
+      const updateData = {
         title,
         content,
         category,
         tags: tagList,
         status,
         updatedAt: new Date().toISOString(),
-      });
+      };
+
+      updateDoc(doc(db, 'essays', id), updateData)
+        .catch(err => {
+          toast({ variant: "destructive", title: "Gagal memperbarui", description: err.message });
+        });
 
       // Log activity
       await addDoc(collection(db, 'activity_logs'), {
@@ -92,15 +103,16 @@ export default function EditEssayPage() {
         timestamp: new Date().toISOString()
       });
 
+      dismiss();
       toast({
-        title: "Perubahan Disimpan",
+        title: "Pembaruan Berhasil",
         description: `Esai "${title}" berhasil diperbarui.`,
       });
       router.push('/admin/AndraNgelantur99/essays');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Gagal memperbarui", description: error.message });
-    } finally {
       setSaving(false);
+      dismiss();
+      toast({ variant: "destructive", title: "Gagal memperbarui", description: error.message });
     }
   };
 
@@ -124,7 +136,7 @@ export default function EditEssayPage() {
             variant="ghost" 
             size="sm" 
             onClick={handleAIImprove}
-            disabled={improving || !content}
+            disabled={improving || saving || !content}
             className="text-white hover:bg-white/5 text-[0.6rem] uppercase tracking-widest hidden md:flex items-center gap-2"
           >
             {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
@@ -136,17 +148,19 @@ export default function EditEssayPage() {
             size="sm" 
             onClick={() => handleUpdate('draft')}
             disabled={saving}
-            className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9"
+            className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9 min-w-[120px]"
           >
-            Simpan Draft
+            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+            {saving ? 'Menyimpan...' : 'Simpan Draft'}
           </Button>
           <Button 
             size="sm" 
             onClick={() => handleUpdate('published')}
             disabled={saving}
-            className="rounded-none bg-white text-black hover:bg-silver text-[0.6rem] uppercase font-bold tracking-widest h-9"
+            className="rounded-none bg-white text-black hover:bg-silver text-[0.6rem] uppercase font-bold tracking-widest h-9 min-w-[120px]"
           >
-            Simpan & Terbitkan
+            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+            {saving ? 'Sinkronisasi...' : 'Simpan & Terbit'}
           </Button>
         </div>
       </header>
@@ -162,6 +176,7 @@ export default function EditEssayPage() {
                 <Input 
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
+                  disabled={saving}
                   className="bg-background/50 border-border text-xs rounded-none h-9"
                 />
               </div>
@@ -172,6 +187,7 @@ export default function EditEssayPage() {
                 <Input 
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
+                  disabled={saving}
                   className="bg-background/50 border-border text-xs rounded-none h-9"
                 />
               </div>
@@ -183,6 +199,7 @@ export default function EditEssayPage() {
                 className="text-4xl md:text-5xl font-display font-bold bg-transparent border-none focus-visible:ring-0 p-0 h-auto placeholder:text-white/5 tracking-tighter"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                disabled={saving}
               />
             </div>
             
@@ -192,6 +209,7 @@ export default function EditEssayPage() {
                 className="min-h-[50vh] bg-transparent border-none focus-visible:ring-0 p-0 text-lg md:text-xl font-serif italic leading-relaxed resize-none"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                disabled={saving}
               />
             </div>
           </div>
@@ -205,7 +223,7 @@ export default function EditEssayPage() {
           <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
             <SheetTrigger asChild>
               <div className="flex flex-col gap-3">
-                <Button size="icon" onClick={handleAIImprove} disabled={improving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
+                <Button size="icon" onClick={handleAIImprove} disabled={improving || saving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
                   {improving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
                 </Button>
                 <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver border border-black/10">

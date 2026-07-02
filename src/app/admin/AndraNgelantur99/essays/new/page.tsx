@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2, CheckCircle2 } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -66,9 +65,16 @@ export default function NewEssayPage() {
     }
 
     setSaving(true);
+    
+    // Menampilkan toast loading sementara
+    const { dismiss } = toast({
+      title: status === 'published' ? "Menerbitkan Konten..." : "Menyimpan Draf...",
+      description: "Sedang mensinkronisasi data ke database.",
+    });
+
     try {
       const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
-      await addDoc(collection(db, 'essays'), {
+      const essayData = {
         title,
         content,
         category,
@@ -78,7 +84,14 @@ export default function NewEssayPage() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         confidence: 70,
-      });
+      };
+
+      // Firestore write (mengikuti aturan no await untuk mutasi instan)
+      addDoc(collection(db, 'essays'), essayData)
+        .catch((err) => {
+          console.error(err);
+          toast({ variant: "destructive", title: "Gagal menyimpan", description: err.message });
+        });
 
       await addDoc(collection(db, 'activity_logs'), {
         adminId: user.uid,
@@ -86,15 +99,17 @@ export default function NewEssayPage() {
         timestamp: new Date().toISOString()
       });
 
+      dismiss();
       toast({
-        title: status === 'published' ? "Konten Diterbitkan" : "Draf Disimpan",
-        description: `Esai "${title}" berhasil disimpan.`,
+        title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
+        description: `Esai "${title}" kini sudah tersinkronisasi di server.`,
       });
+      
       router.push('/admin/AndraNgelantur99/essays');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Gagal menyimpan", description: error.message });
-    } finally {
       setSaving(false);
+      dismiss();
+      toast({ variant: "destructive", title: "Gagal menyimpan", description: error.message });
     }
   };
 
@@ -116,7 +131,7 @@ export default function NewEssayPage() {
             variant="ghost" 
             size="sm" 
             onClick={handleAIImprove}
-            disabled={improving || !content}
+            disabled={improving || saving || !content}
             className="text-white hover:bg-white/5 text-[0.6rem] uppercase tracking-widest hidden md:flex items-center gap-2"
           >
             {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
@@ -128,17 +143,19 @@ export default function NewEssayPage() {
             size="sm" 
             onClick={() => handleSave('draft')}
             disabled={saving}
-            className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9"
+            className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9 min-w-[120px]"
           >
-            Simpan Draft
+            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+            {saving ? 'Proses...' : 'Simpan Draft'}
           </Button>
           <Button 
             size="sm" 
             onClick={() => handleSave('published')}
             disabled={saving}
-            className="rounded-none bg-white text-black hover:bg-silver text-[0.6rem] uppercase font-bold tracking-widest h-9"
+            className="rounded-none bg-white text-black hover:bg-silver text-[0.6rem] uppercase font-bold tracking-widest h-9 min-w-[120px]"
           >
-            Terbitkan
+            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+            {saving ? 'Menerbitkan...' : 'Terbitkan'}
           </Button>
         </div>
       </header>
@@ -156,6 +173,7 @@ export default function NewEssayPage() {
                   placeholder="Ekonomi, AI, dll..." 
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
+                  disabled={saving}
                   className="bg-background/50 border-border text-xs rounded-none h-10"
                 />
               </div>
@@ -167,6 +185,7 @@ export default function NewEssayPage() {
                   placeholder="Data, Masa Depan..." 
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
+                  disabled={saving}
                   className="bg-background/50 border-border text-xs rounded-none h-10"
                 />
               </div>
@@ -179,6 +198,7 @@ export default function NewEssayPage() {
                 className="text-3xl md:text-5xl font-display font-bold bg-transparent border-none focus-visible:ring-0 p-0 h-auto placeholder:text-white/5 tracking-tighter"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                disabled={saving}
               />
             </div>
             
@@ -189,6 +209,7 @@ export default function NewEssayPage() {
                 className="min-h-[50vh] bg-transparent border-none focus-visible:ring-0 p-0 text-lg md:text-xl font-serif italic leading-relaxed placeholder:text-white/5 resize-none"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                disabled={saving}
               />
             </div>
           </div>
@@ -202,7 +223,7 @@ export default function NewEssayPage() {
           <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
             <SheetTrigger asChild>
               <div className="flex flex-col gap-3">
-                <Button size="icon" onClick={handleAIImprove} disabled={improving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
+                <Button size="icon" onClick={handleAIImprove} disabled={improving || saving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
                   {improving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
                 </Button>
                 <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver border border-black/10">
