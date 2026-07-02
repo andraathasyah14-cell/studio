@@ -3,17 +3,20 @@
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, query, orderBy, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Search, Plus, Trash2, BookOpen, ExternalLink, Calendar, User } from 'lucide-react';
+import { collection, query, orderBy, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { Search, Plus, Trash2, BookOpen, ExternalLink, Calendar, User, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function PaperManagement() {
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newPaper, setNewPaper] = useState({ title: '', author: '', year: '', category: '', link: '' });
+  const [saving, setSaving] = useState(false);
   
   const db = useFirestore();
   const { user } = useUser();
@@ -31,39 +34,61 @@ export default function PaperManagement() {
     p.author.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddPaper = async () => {
+  const handleAddPaper = () => {
     if (!db || !user || !newPaper.title) return;
+    setSaving(true);
     
-    try {
-      const paperData = {
-        ...newPaper,
-        year: parseInt(newPaper.year) || 2024,
-        uploadedAt: new Date().toISOString(),
-      };
-      
-      await addDoc(collection(db, 'papers'), paperData);
-      await addDoc(collection(db, 'activity_logs'), {
-        adminId: user.uid,
-        action: `Menambahkan paper: ${newPaper.title}`,
-        timestamp: new Date().toISOString()
+    const paperData = {
+      ...newPaper,
+      year: parseInt(newPaper.year) || 2024,
+      uploadedAt: new Date().toISOString(),
+    };
+    
+    const paperRef = collection(db, 'papers');
+    
+    addDoc(paperRef, paperData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: paperRef.path,
+          operation: 'create',
+          requestResourceData: paperData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
 
-      setNewPaper({ title: '', author: '', year: '', category: '', link: '' });
-      setIsAddOpen(false);
-      toast({ title: "Paper Ditambahkan", description: "Metadata paper berhasil disimpan." });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Gagal", description: error.message });
-    }
+    addDoc(collection(db, 'activity_logs'), {
+      adminId: user.uid,
+      action: `Menambahkan paper: ${newPaper.title}`,
+      timestamp: new Date().toISOString()
+    }).catch(() => {});
+
+    // Optimistic UI updates
+    setNewPaper({ title: '', author: '', year: '', category: '', link: '' });
+    setIsAddOpen(false);
+    setSaving(false);
+    toast({ title: "Berhasil", description: "Metadata paper sedang disimpan." });
   };
 
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = (id: string, title: string) => {
     if (!db || !user || !window.confirm(`Hapus paper "${title}"?`)) return;
-    await deleteDoc(doc(db, 'papers', id));
-    await addDoc(collection(db, 'activity_logs'), {
+    
+    const docRef = doc(db, 'papers', id);
+    deleteDoc(docRef)
+      .catch(async () => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+
+    addDoc(collection(db, 'activity_logs'), {
       adminId: user.uid,
       action: `Menghapus paper: ${title}`,
       timestamp: new Date().toISOString()
-    });
+    }).catch(() => {});
+    
+    toast({ title: "Terhapus", description: `Paper "${title}" telah dihapus.` });
   };
 
   return (
@@ -123,8 +148,12 @@ export default function PaperManagement() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleAddPaper} className="bg-white text-black font-bold uppercase text-[0.6rem] tracking-widest rounded-none w-full h-11">
-                Simpan Paper
+              <Button 
+                onClick={handleAddPaper} 
+                disabled={saving}
+                className="bg-white text-black font-bold uppercase text-[0.6rem] tracking-widest rounded-none w-full h-11"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Simpan Paper'}
               </Button>
             </DialogFooter>
           </DialogContent>

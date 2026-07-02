@@ -122,23 +122,9 @@ export default function NewEssayPage() {
 
     const essayRef = collection(db, 'essays');
     
+    // NON-BLOCKING WRITE: Lakukan penyimpanan tanpa menunggu await
     addDoc(essayRef, essayData)
-      .then(() => {
-        // Clear draft on success
-        localStorage.removeItem('andra_draft_title');
-        localStorage.removeItem('andra_draft_content');
-        localStorage.removeItem('andra_draft_category');
-        localStorage.removeItem('andra_draft_tags');
-
-        toast({
-          title: status === 'published' ? "Terbit" : "Draf Disimpan",
-          description: `Esai "${title}" telah disinkronkan.`,
-        });
-        
-        router.push('/admin/AndraNgelantur99/essays');
-      })
       .catch(async (serverError) => {
-        setSaving(false);
         const permissionError = new FirestorePermissionError({
           path: essayRef.path,
           operation: 'create',
@@ -152,6 +138,19 @@ export default function NewEssayPage() {
       action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
       timestamp: new Date().toISOString()
     }).catch(() => {});
+
+    // OPTIMISTIC NAVIGATION: Langsung redirect tanpa menunggu server
+    localStorage.removeItem('andra_draft_title');
+    localStorage.removeItem('andra_draft_content');
+    localStorage.removeItem('andra_draft_category');
+    localStorage.removeItem('andra_draft_tags');
+
+    toast({
+      title: status === 'published' ? "Terbit" : "Draf Disimpan",
+      description: `Esai "${title}" sedang diproses di latar belakang.`,
+    });
+    
+    router.push('/admin/AndraNgelantur99/essays');
   };
 
   if (!isInitialized) return null;

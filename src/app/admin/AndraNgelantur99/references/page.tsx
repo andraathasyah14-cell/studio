@@ -4,18 +4,21 @@
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useUser } from '@/firebase';
 import { collection, query, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import { Search, Plus, Trash2, Quote, Link as LinkIcon, Book, Database } from 'lucide-react';
+import { Search, Plus, Trash2, Quote, Link as LinkIcon, Book, Database, ExternalLink, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function ReferenceManagement() {
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newRef, setNewRef] = useState({ title: '', author: '', source: '', quote: '', category: 'Buku', link: '' });
+  const [saving, setSaving] = useState(false);
   
   const db = useFirestore();
   const { user } = useUser();
@@ -34,37 +37,60 @@ export default function ReferenceManagement() {
     r.category?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAddRef = async () => {
+  const handleAddRef = () => {
     if (!db || !user || !newRef.title) return;
+    setSaving(true);
     
-    try {
-      await addDoc(collection(db, 'references'), {
-        ...newRef,
-        createdAt: new Date().toISOString()
+    const refData = {
+      ...newRef,
+      createdAt: new Date().toISOString()
+    };
+    
+    const refCollection = collection(db, 'references');
+    
+    addDoc(refCollection, refData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: refCollection.path,
+          operation: 'create',
+          requestResourceData: refData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
       
-      await addDoc(collection(db, 'activity_logs'), {
-        adminId: user.uid,
-        action: `Menambahkan referensi: ${newRef.title}`,
-        timestamp: new Date().toISOString()
-      });
+    addDoc(collection(db, 'activity_logs'), {
+      adminId: user.uid,
+      action: `Menambahkan referensi: ${newRef.title}`,
+      timestamp: new Date().toISOString()
+    }).catch(() => {});
 
-      setNewRef({ title: '', author: '', source: '', quote: '', category: 'Buku', link: '' });
-      setIsAddOpen(false);
-      toast({ title: "Referensi Disimpan", description: "Item berhasil ditambahkan ke bank referensi." });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Gagal", description: error.message });
-    }
+    // Optimistic UI updates
+    setNewRef({ title: '', author: '', source: '', quote: '', category: 'Buku', link: '' });
+    setIsAddOpen(false);
+    setSaving(false);
+    toast({ title: "Berhasil", description: "Referensi sedang diproses." });
   };
 
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = (id: string, title: string) => {
     if (!db || !user || !window.confirm(`Hapus referensi "${title}"?`)) return;
-    await deleteDoc(doc(db, 'references', id));
-    await addDoc(collection(db, 'activity_logs'), {
+    
+    const docRef = doc(db, 'references', id);
+    deleteDoc(docRef)
+      .catch(async () => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+
+    addDoc(collection(db, 'activity_logs'), {
       adminId: user.uid,
       action: `Menghapus referensi: ${title}`,
       timestamp: new Date().toISOString()
-    });
+    }).catch(() => {});
+
+    toast({ title: "Terhapus", description: "Referensi telah dihapus." });
   };
 
   return (
@@ -127,8 +153,12 @@ export default function ReferenceManagement() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleAddRef} className="bg-white text-black font-bold uppercase text-[0.6rem] tracking-widest rounded-none w-full h-11">
-                Simpan Referensi
+              <Button 
+                onClick={handleAddRef} 
+                disabled={saving}
+                className="bg-white text-black font-bold uppercase text-[0.6rem] tracking-widest rounded-none w-full h-11"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Simpan Referensi'}
               </Button>
             </DialogFooter>
           </DialogContent>
