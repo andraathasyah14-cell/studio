@@ -66,6 +66,7 @@ export default function NewEssayPage() {
 
     setSaving(true);
     
+    // Normalisasi: Huruf kecil untuk mencegah duplikasi topik
     const normalizedCategory = category.trim().toLowerCase();
     const normalizedTags = tags.split(',')
       .map(t => t.trim().toLowerCase())
@@ -83,22 +84,9 @@ export default function NewEssayPage() {
     };
 
     const essayRef = collection(db, 'essays');
+    
+    // Optimistic Update: Jangan gunakan await agar UI responsif seketika
     addDoc(essayRef, essayData)
-      .then(() => {
-        const logRef = collection(db, 'activity_logs');
-        addDoc(logRef, {
-          adminId: user.uid,
-          action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
-          timestamp: new Date().toISOString()
-        }).catch(() => {});
-
-        toast({
-          title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
-          description: `Esai "${title}" telah berhasil disimpan.`,
-        });
-        
-        router.push('/admin/AndraNgelantur99/essays');
-      })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: essayRef.path,
@@ -106,8 +94,22 @@ export default function NewEssayPage() {
           requestResourceData: essayData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
-        setSaving(false);
       });
+
+    // Kirim log aktivitas di background
+    addDoc(collection(db, 'activity_logs'), {
+      adminId: user.uid,
+      action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
+      timestamp: new Date().toISOString()
+    }).catch(() => {});
+
+    toast({
+      title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
+      description: `Esai "${title}" sedang disinkronkan.`,
+    });
+    
+    // Langsung pindah halaman tanpa menunggu server (instan)
+    router.push('/admin/AndraNgelantur99/essays');
   };
 
   return (

@@ -75,6 +75,7 @@ export default function EditEssayPage() {
     if (!db || !id || !user) return;
     setSaving(true);
     
+    // Normalisasi: Huruf kecil untuk mencegah duplikasi topik
     const normalizedCategory = category.trim().toLowerCase();
     const tagList = tags.split(',')
       .map(t => t.trim().toLowerCase())
@@ -90,21 +91,9 @@ export default function EditEssayPage() {
     };
 
     const docRef = doc(db, 'essays', id);
+    
+    // Optimistic Update: Jangan gunakan await
     updateDoc(docRef, updateData)
-      .then(() => {
-        addDoc(collection(db, 'activity_logs'), {
-          adminId: user.uid,
-          action: `Memperbarui esai: ${title}`,
-          timestamp: new Date().toISOString()
-        }).catch(() => {});
-
-        toast({
-          title: "Pembaruan Berhasil",
-          description: `Perubahan pada "${title}" telah disimpan.`,
-        });
-        
-        router.push('/admin/AndraNgelantur99/essays');
-      })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: docRef.path,
@@ -112,8 +101,22 @@ export default function EditEssayPage() {
           requestResourceData: updateData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
-        setSaving(false);
       });
+
+    // Simpan log di background
+    addDoc(collection(db, 'activity_logs'), {
+      adminId: user.uid,
+      action: `Memperbarui esai: ${title}`,
+      timestamp: new Date().toISOString()
+    }).catch(() => {});
+
+    toast({
+      title: "Pembaruan Berhasil",
+      description: `Perubahan pada "${title}" sedang disinkronkan.`,
+    });
+    
+    // Langsung pindah halaman (instan)
+    router.push('/admin/AndraNgelantur99/essays');
   };
 
   if (loading) return <div className="p-20 text-center uppercase tracking-widest text-[0.6rem]">Memuat Esai...</div>;
