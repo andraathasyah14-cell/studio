@@ -8,7 +8,6 @@ import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
@@ -32,7 +31,6 @@ export default function EditEssayPage() {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
 
@@ -50,7 +48,6 @@ export default function EditEssayPage() {
       const separator = prev ? '\n\n' : '';
       return prev + separator + text;
     });
-    setIsFormOpen(false);
     toast({
       title: "Jawaban Dipindahkan",
       description: "Jawaban kuesioner telah ditambahkan ke editor.",
@@ -78,7 +75,6 @@ export default function EditEssayPage() {
     if (!db || !id || !user) return;
     setSaving(true);
     
-    // Normalisasi Tag dan Kategori ke lowercase
     const normalizedCategory = category.trim().toLowerCase();
     const tagList = tags.split(',')
       .map(t => t.trim().toLowerCase())
@@ -95,6 +91,20 @@ export default function EditEssayPage() {
 
     const docRef = doc(db, 'essays', id);
     updateDoc(docRef, updateData)
+      .then(() => {
+        addDoc(collection(db, 'activity_logs'), {
+          adminId: user.uid,
+          action: `Memperbarui esai: ${title}`,
+          timestamp: new Date().toISOString()
+        }).catch(() => {});
+
+        toast({
+          title: "Pembaruan Berhasil",
+          description: `Perubahan pada "${title}" telah disimpan.`,
+        });
+        
+        router.push('/admin/AndraNgelantur99/essays');
+      })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: docRef.path,
@@ -102,20 +112,8 @@ export default function EditEssayPage() {
           requestResourceData: updateData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
+        setSaving(false);
       });
-
-    addDoc(collection(db, 'activity_logs'), {
-      adminId: user.uid,
-      action: `Memperbarui esai: ${title}`,
-      timestamp: new Date().toISOString()
-    }).catch(() => {});
-
-    toast({
-      title: "Pembaruan Berhasil",
-      description: `Perubahan pada "${title}" sedang diproses.`,
-    });
-    
-    router.push('/admin/AndraNgelantur99/essays');
   };
 
   if (loading) return <div className="p-20 text-center uppercase tracking-widest text-[0.6rem]">Memuat Esai...</div>;

@@ -8,8 +8,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +21,6 @@ export default function NewEssayPage() {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
   
@@ -53,7 +51,6 @@ export default function NewEssayPage() {
       const separator = prev ? '\n\n' : '';
       return prev + separator + text;
     });
-    setIsFormOpen(false);
     toast({
       title: "Teks Berhasil Dipindahkan",
       description: "Jawaban kuesioner Anda telah dimasukkan ke editor utama.",
@@ -69,7 +66,6 @@ export default function NewEssayPage() {
 
     setSaving(true);
     
-    // Normalisasi Tag dan Kategori ke lowercase untuk mencegah duplikasi
     const normalizedCategory = category.trim().toLowerCase();
     const normalizedTags = tags.split(',')
       .map(t => t.trim().toLowerCase())
@@ -88,6 +84,21 @@ export default function NewEssayPage() {
 
     const essayRef = collection(db, 'essays');
     addDoc(essayRef, essayData)
+      .then(() => {
+        const logRef = collection(db, 'activity_logs');
+        addDoc(logRef, {
+          adminId: user.uid,
+          action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
+          timestamp: new Date().toISOString()
+        }).catch(() => {});
+
+        toast({
+          title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
+          description: `Esai "${title}" telah berhasil disimpan.`,
+        });
+        
+        router.push('/admin/AndraNgelantur99/essays');
+      })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: essayRef.path,
@@ -95,22 +106,8 @@ export default function NewEssayPage() {
           requestResourceData: essayData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
+        setSaving(false);
       });
-
-    const logRef = collection(db, 'activity_logs');
-    const logData = {
-      adminId: user.uid,
-      action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
-      timestamp: new Date().toISOString()
-    };
-    addDoc(logRef, logData).catch(() => {});
-
-    toast({
-      title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
-      description: `Esai "${title}" sedang diproses di latar belakang.`,
-    });
-    
-    router.push('/admin/AndraNgelantur99/essays');
   };
 
   return (

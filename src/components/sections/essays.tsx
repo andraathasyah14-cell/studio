@@ -37,9 +37,11 @@ export default function Essays() {
           essays.map((essay, i) => (
             <div key={essay.id} className="group py-8 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="md:col-span-3 space-y-2">
-                <h3 className="text-xl font-medium text-muted-foreground group-hover:text-white transition-colors cursor-pointer">
-                  {essay.title}
-                </h3>
+                <Link href={`/essay/${essay.id}`}>
+                  <h3 className="text-xl font-medium text-muted-foreground group-hover:text-white transition-colors cursor-pointer">
+                    {essay.title}
+                  </h3>
+                </Link>
                 <p className="text-sm text-muted-foreground leading-relaxed max-w-prose line-clamp-2">
                   {essay.content?.substring(0, 160)}...
                 </p>
