@@ -8,13 +8,14 @@ import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2, ClipboardCheck } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { improveEssayAction } from '@/app/actions';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function EditEssayPage() {
   const params = useParams();
@@ -33,6 +34,7 @@ export default function EditEssayPage() {
   const [tags, setTags] = useState('');
   const [saving, setSaving] = useState(false);
   const [improving, setImproving] = useState(false);
+  const [showMobileTemplate, setShowMobileTemplate] = useState(false);
 
   useEffect(() => {
     if (essay) {
@@ -49,9 +51,10 @@ export default function EditEssayPage() {
       return prev + separator + text;
     });
     toast({
-      title: "Jawaban Dipindahkan",
-      description: "Jawaban kuesioner telah ditambahkan ke editor.",
+      title: "Teks Ditambahkan",
+      description: "Jawaban panduan telah dimasukkan ke editor.",
     });
+    setShowMobileTemplate(false);
   };
 
   const handleAIImprove = async () => {
@@ -61,8 +64,8 @@ export default function EditEssayPage() {
       const result = await improveEssayAction({ content });
       setContent(result.improvedContent);
       toast({
-        title: "Penyempurnaan AI Selesai",
-        description: "Tulisan Anda telah dipertajam oleh AI.",
+        title: "AI Selesai",
+        description: "Tulisan Anda telah diperbaiki.",
       });
     } catch (error: any) {
       toast({ variant: "destructive", title: "AI Gagal", description: error.message });
@@ -75,7 +78,6 @@ export default function EditEssayPage() {
     if (!db || !id || !user) return;
     setSaving(true);
     
-    // Normalisasi: Huruf kecil untuk mencegah duplikasi topik
     const normalizedCategory = category.trim().toLowerCase();
     const tagList = tags.split(',')
       .map(t => t.trim().toLowerCase())
@@ -92,7 +94,6 @@ export default function EditEssayPage() {
 
     const docRef = doc(db, 'essays', id);
     
-    // Optimistic Update: Jangan gunakan await
     updateDoc(docRef, updateData)
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -103,23 +104,21 @@ export default function EditEssayPage() {
         errorEmitter.emit('permission-error', permissionError);
       });
 
-    // Simpan log di background
     addDoc(collection(db, 'activity_logs'), {
       adminId: user.uid,
-      action: `Memperbarui esai: ${title}`,
+      action: `Update esai: ${title}`,
       timestamp: new Date().toISOString()
     }).catch(() => {});
 
     toast({
-      title: "Pembaruan Berhasil",
-      description: `Perubahan pada "${title}" sedang disinkronkan.`,
+      title: "Tersimpan",
+      description: `Perubahan pada "${title}" telah disinkronkan.`,
     });
     
-    // Langsung pindah halaman (instan)
     router.push('/admin/AndraNgelantur99/essays');
   };
 
-  if (loading) return <div className="p-20 text-center uppercase tracking-widest text-[0.6rem]">Memuat Esai...</div>;
+  if (loading) return <div className="p-20 text-center uppercase tracking-widest text-[0.6rem]">Memuat data...</div>;
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-background">
@@ -135,6 +134,17 @@ export default function EditEssayPage() {
         </div>
         
         <div className="flex items-center gap-2">
+          <Sheet open={showMobileTemplate} onOpenChange={setShowMobileTemplate}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="lg:hidden border-border text-[0.6rem] uppercase tracking-widest">
+                <ClipboardCheck className="w-3.5 h-3.5 mr-2" /> Panduan
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="p-0 w-full sm:max-w-[400px] bg-card border-l border-border">
+              <AnalysisForm onInsertDraft={handleInsertFromForm} />
+            </SheetContent>
+          </Sheet>
+
           <Button 
             variant="ghost" 
             size="sm" 
@@ -145,25 +155,25 @@ export default function EditEssayPage() {
             {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
             AI Improve
           </Button>
+          
           <div className="w-px h-6 bg-border mx-2 hidden md:block" />
+          
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => handleUpdate('draft')}
             disabled={saving}
-            className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9 min-w-[120px]"
+            className="rounded-none border-border text-[0.6rem] uppercase tracking-widest h-9"
           >
-            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
-            {saving ? 'Proses...' : 'Simpan Draft'}
+            {saving ? '...' : 'Draft'}
           </Button>
           <Button 
             size="sm" 
             onClick={() => handleUpdate('published')}
             disabled={saving}
-            className="rounded-none bg-white text-black hover:bg-silver text-[0.6rem] uppercase font-bold tracking-widest h-9 min-w-[120px]"
+            className="rounded-none bg-white text-black hover:bg-silver text-[0.6rem] uppercase font-bold tracking-widest h-9"
           >
-            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
-            {saving ? 'Sinkronisasi...' : 'Simpan & Terbit'}
+            {saving ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : 'Simpan & Terbit'}
           </Button>
         </div>
       </header>
@@ -173,7 +183,7 @@ export default function EditEssayPage() {
           <div className="max-w-[800px] mx-auto space-y-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.02] p-6 border border-border">
               <div className="space-y-2">
-                <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 font-bold">
                   <Tag className="w-3 h-3" /> Kategori
                 </label>
                 <Input 
@@ -184,8 +194,8 @@ export default function EditEssayPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                  <FileText className="w-3 h-3" /> Tags (Koma)
+                <label className="text-[0.55rem] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 font-bold">
+                  <FileText className="w-3 h-3" /> Tags (Pemisah Koma)
                 </label>
                 <Input 
                   value={tags}
@@ -218,7 +228,7 @@ export default function EditEssayPage() {
           </div>
         </main>
 
-        <aside className="w-[400px] hidden xl:block border-l border-border bg-card overflow-hidden">
+        <aside className="w-[400px] hidden lg:block border-l border-border bg-card overflow-hidden">
           <AnalysisForm onInsertDraft={handleInsertFromForm} />
         </aside>
       </div>

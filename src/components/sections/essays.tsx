@@ -21,7 +21,7 @@ export default function Essays() {
 
   if (loading) return (
     <div className="py-20 px-6 text-center text-[0.6rem] uppercase tracking-widest text-muted-foreground">
-      Menghubungkan ke Database...
+      Membuka Arsip Esai...
     </div>
   );
 
@@ -35,30 +35,33 @@ export default function Essays() {
       <div className="divide-y divide-border">
         {essays && essays.length > 0 ? (
           essays.map((essay, i) => (
-            <div key={essay.id} className="group py-8 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="md:col-span-3 space-y-2">
-                <Link href={`/essay/${essay.id}`}>
-                  <h3 className="text-xl font-medium text-muted-foreground group-hover:text-white transition-colors cursor-pointer">
+            <div key={essay.id} className="group py-10 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="md:col-span-3 space-y-4">
+                <Link href={`/essay/${essay.id}`} className="block">
+                  <h3 className="text-2xl font-display font-medium text-muted-foreground group-hover:text-white transition-colors cursor-pointer leading-tight">
                     {essay.title}
                   </h3>
                 </Link>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-prose line-clamp-2">
-                  {essay.content?.substring(0, 160)}...
+                <p className="text-[0.95rem] font-serif italic text-muted-foreground leading-relaxed max-w-prose line-clamp-3">
+                  {essay.content?.substring(0, 200)}...
                 </p>
+                <Link href={`/essay/${essay.id}`} className="inline-block text-[0.6rem] uppercase tracking-widest text-white border-b border-white pb-0.5 hover:opacity-70 transition-opacity">
+                  Baca Selengkapnya
+                </Link>
               </div>
               
-              <div className="flex flex-col items-start md:items-end gap-2 text-right">
-                <span className="text-[0.7rem] text-muted-foreground tracking-wider">
-                  {new Date(essay.updatedAt).toLocaleDateString('id-ID')}
+              <div className="flex flex-col items-start md:items-end gap-3 text-right">
+                <span className="text-[0.7rem] font-bold text-muted-foreground tracking-widest uppercase">
+                  {new Date(essay.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
-                <div className="flex flex-wrap gap-1 md:justify-end">
+                <div className="flex flex-wrap gap-1.5 md:justify-end">
                   {essay.tags?.map((tag: string) => (
                     <Link 
                       key={tag} 
                       href={`/topik/${encodeURIComponent(tag)}`}
-                      className="text-[0.6rem] uppercase tracking-tighter border border-border px-1.5 py-0.5 text-muted-foreground hover:border-white hover:text-white transition-colors"
+                      className="text-[0.55rem] uppercase tracking-tighter border border-border px-2 py-0.5 text-muted-foreground hover:border-white hover:text-white transition-colors"
                     >
-                      {tag}
+                      #{tag}
                     </Link>
                   ))}
                 </div>
@@ -67,7 +70,7 @@ export default function Essays() {
           ))
         ) : (
           <div className="py-12 text-center">
-            <p className="text-sm italic font-serif text-muted-foreground">Belum ada esai yang diterbitkan.</p>
+            <p className="text-sm italic font-serif text-muted-foreground">Belum ada pemikiran yang dibagikan secara publik.</p>
           </div>
         )}
       </div>
