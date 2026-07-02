@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useMemo } from 'react';
@@ -9,7 +8,10 @@ import { collection } from 'firebase/firestore';
 export default function KnowledgeGraph() {
   const containerRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
-  const { data: essays } = useCollection(collection(db, 'essays'));
+
+  // Memoisasi query untuk mencegah infinite render loop
+  const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
+  const { data: essays } = useCollection(essaysQuery);
 
   // Ambil semua tag unik dari esai secara dinamis
   const nodes = useMemo(() => {

@@ -20,10 +20,16 @@ import {
 export default function AnalyticsPage() {
   const db = useFirestore();
 
-  const { data: essays } = useCollection(collection(db, 'essays'));
-  const { data: papers } = useCollection(collection(db, 'papers'));
-  const { data: refs } = useCollection(collection(db, 'references'));
-  const { data: logs } = useCollection(query(collection(db, 'activity_logs'), orderBy('timestamp', 'asc')));
+  // Memoisasi query untuk mencegah infinite render loop
+  const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
+  const papersQuery = useMemo(() => db ? collection(db, 'papers') : null, [db]);
+  const refsQuery = useMemo(() => db ? collection(db, 'references') : null, [db]);
+  const logsQuery = useMemo(() => db ? query(collection(db, 'activity_logs'), orderBy('timestamp', 'asc')) : null, [db]);
+
+  const { data: essays } = useCollection(essaysQuery);
+  const { data: papers } = useCollection(papersQuery);
+  const { data: refs } = useCollection(refsQuery);
+  const { data: logs } = useCollection(logsQuery);
 
   // Data for Category Distribution (Essays)
   const categoryData = useMemo(() => {

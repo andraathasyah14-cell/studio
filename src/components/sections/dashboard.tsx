@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from "react";
@@ -12,15 +11,18 @@ export default function Dashboard() {
   const [isMounted, setIsMounted] = useState(false);
   const db = useFirestore();
 
-  const { data: essays } = useCollection(collection(db, 'essays'));
-  const { data: papers } = useCollection(collection(db, 'papers'));
-  const { data: refs } = useCollection(collection(db, 'references'));
-
+  // Memoisasi query untuk mencegah infinite render loop
+  const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
+  const papersQuery = useMemo(() => db ? collection(db, 'papers') : null, [db]);
+  const refsQuery = useMemo(() => db ? collection(db, 'references') : null, [db]);
   const recentRefsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, 'references'), orderBy('title', 'asc'), limit(3));
   }, [db]);
-  
+
+  const { data: essays } = useCollection(essaysQuery);
+  const { data: papers } = useCollection(papersQuery);
+  const { data: refs } = useCollection(refsQuery);
   const { data: recentResources } = useCollection(recentRefsQuery);
 
   useEffect(() => {
@@ -128,7 +130,7 @@ function StatCell({ value, label }: { value: string; label: string }) {
   return (
     <div className="bg-background p-6 flex flex-col justify-center text-center">
       <span className="font-display text-2xl font-bold text-white mb-1">{value}</span>
-      <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground leading-tight">{label}</span>
+      <span className="text-[0.55rem] uppercase tracking-widest text-muted-foreground leading-tight">{label}</span>
     </div>
   );
 }
