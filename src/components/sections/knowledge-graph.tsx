@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, useMemo } from 'react';
@@ -9,22 +10,24 @@ export default function KnowledgeGraph() {
   const containerRef = useRef<HTMLDivElement>(null);
   const db = useFirestore();
 
-  // Memoisasi query untuk mencegah infinite render loop
   const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
   const { data: essays } = useCollection(essaysQuery);
 
-  // Ambil semua tag unik dari esai secara dinamis
   const nodes = useMemo(() => {
+    // Normalisasi Tag secara Case-Insensitive untuk Knowledge Graph
     const allTags = new Set<string>();
-    essays?.forEach(e => e.tags?.forEach((t: string) => allTags.add(t)));
+    essays?.forEach(e => {
+      e.tags?.forEach((t: string) => {
+        allTags.add(t.toLowerCase());
+      });
+    });
     
     if (allTags.size === 0) {
-      // Default nodes if no data yet
       return [
-        { id: 0, label: 'Ekonomi', x: 50, y: 45 },
-        { id: 1, label: 'Pendidikan', x: 28, y: 28 },
-        { id: 2, label: 'Teknologi', x: 72, y: 25 },
-        { id: 3, label: 'Hukum', x: 20, y: 60 }
+        { id: 0, label: 'ekonomi', x: 50, y: 45 },
+        { id: 1, label: 'pendidikan', x: 28, y: 28 },
+        { id: 2, label: 'teknologi', x: 72, y: 25 },
+        { id: 3, label: 'hukum', x: 20, y: 60 }
       ];
     }
 
@@ -88,9 +91,6 @@ export default function KnowledgeGraph() {
           </Link>
         ))}
       </div>
-      <p className="text-[0.6rem] text-muted-foreground text-center mt-6 uppercase tracking-widest italic opacity-50">
-        Grafik hubungan topik yang dibangun dari metadata tulisan Anda.
-      </p>
     </section>
   );
 }

@@ -60,7 +60,6 @@ export default function Essays() {
                     </Link>
                   ))}
                 </div>
-                <ConfidenceBadge confidence={essay.confidence || 70} />
               </div>
             </div>
           ))
@@ -71,17 +70,5 @@ export default function Essays() {
         )}
       </div>
     </section>
-  );
-}
-
-function ConfidenceBadge({ confidence }: { confidence: number }) {
-  let colorClass = "border-orange-900/30 text-orange-500/80";
-  if (confidence >= 75) colorClass = "border-emerald-900/30 text-emerald-500/80";
-  else if (confidence < 60) colorClass = "border-rose-900/30 text-rose-500/80";
-
-  return (
-    <div className={`mt-2 font-display text-[0.65rem] font-medium tracking-wide border px-2 py-0.5 ${colorClass}`}>
-      Keyakinan {confidence}%
-    </div>
   );
 }

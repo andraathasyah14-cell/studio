@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -5,22 +6,18 @@ import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle 
+  Card, CardContent, CardHeader, CardTitle 
 } from "@/components/ui/card";
 import { 
-  ChartContainer, ChartTooltip, ChartTooltipContent 
-} from "@/components/ui/chart";
-import { 
-  TrendingUp, Users, FileText, BookOpen, Activity, Target
+  TrendingUp, FileText, BookOpen, Activity, Library
 } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const db = useFirestore();
 
-  // Memoisasi query untuk mencegah infinite render loop
   const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
   const papersQuery = useMemo(() => db ? collection(db, 'papers') : null, [db]);
   const refsQuery = useMemo(() => db ? collection(db, 'references') : null, [db]);
@@ -31,27 +28,26 @@ export default function AnalyticsPage() {
   const { data: refs } = useCollection(refsQuery);
   const { data: logs } = useCollection(logsQuery);
 
-  // Data for Category Distribution (Essays)
+  // Normalisasi Kategori (Case-Insensitive)
   const categoryData = useMemo(() => {
     const counts: Record<string, number> = {};
     essays?.forEach(e => {
-      const cat = e.category || 'Uncategorized';
+      const cat = (e.category || 'uncategorized').toLowerCase();
       counts[cat] = (counts[cat] || 0) + 1;
     });
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
   }, [essays]);
 
-  // Data for Reference Types (Pie Chart)
+  // Normalisasi Referensi (Case-Insensitive)
   const refTypeData = useMemo(() => {
     const counts: Record<string, number> = {};
     refs?.forEach(r => {
-      const type = r.category || 'Lainnya';
+      const type = (r.category || 'lainnya').toLowerCase();
       counts[type] = (counts[type] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [refs]);
 
-  // Data for Activity Over Time (Area Chart)
   const activityTrend = useMemo(() => {
     const days: Record<string, number> = {};
     logs?.forEach(l => {
@@ -60,13 +56,6 @@ export default function AnalyticsPage() {
     });
     return Object.entries(days).map(([date, count]) => ({ date, count })).slice(-7);
   }, [logs]);
-
-  // Confidence Average
-  const avgConfidence = useMemo(() => {
-    if (!essays || essays.length === 0) return 0;
-    const total = essays.reduce((acc, curr) => acc + (curr.confidence || 0), 0);
-    return Math.round(total / essays.length);
-  }, [essays]);
 
   const COLORS = ['#FFFFFF', '#A1A1AA', '#52525B', '#27272A'];
 
@@ -77,18 +66,7 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground text-[0.6rem] uppercase tracking-widest mt-2 font-bold">Wawasan Data Riset & Publikasi</p>
       </header>
 
-      {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border">
-        <div className="p-6 bg-card space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Target className="w-3.5 h-3.5" />
-            <span className="text-[0.55rem] uppercase tracking-widest font-bold">Rata-rata Keyakinan</span>
-          </div>
-          <p className="text-3xl font-display font-bold text-white">{avgConfidence}%</p>
-          <div className="h-1 bg-white/5 w-full mt-2">
-            <div className="h-full bg-white transition-all duration-1000" style={{ width: `${avgConfidence}%` }} />
-          </div>
-        </div>
         <div className="p-6 bg-card space-y-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Activity className="w-3.5 h-3.5" />
@@ -110,10 +88,16 @@ export default function AnalyticsPage() {
           </div>
           <p className="text-3xl font-display font-bold text-white">{papers?.length || 0}</p>
         </div>
+        <div className="p-6 bg-card space-y-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Library className="w-3.5 h-3.5" />
+            <span className="text-[0.55rem] uppercase tracking-widest font-bold">Bank Referensi</span>
+          </div>
+          <p className="text-3xl font-display font-bold text-white">{refs?.length || 0}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Category Distribution Chart */}
         <Card className="rounded-none border-border bg-card">
           <CardHeader className="border-b border-border">
             <CardTitle className="text-[0.65rem] uppercase tracking-widest font-bold flex items-center gap-2">
@@ -156,7 +140,6 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Reference Types Pie Chart */}
         <Card className="rounded-none border-border bg-card">
           <CardHeader className="border-b border-border">
             <CardTitle className="text-[0.65rem] uppercase tracking-widest font-bold">Komposisi Bank Referensi</CardTitle>
@@ -207,7 +190,6 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Activity Trend */}
         <Card className="lg:col-span-2 rounded-none border-border bg-card">
           <CardHeader className="border-b border-border">
             <CardTitle className="text-[0.65rem] uppercase tracking-widest font-bold">Intensitas Aktivitas Sistem (Timeline)</CardTitle>

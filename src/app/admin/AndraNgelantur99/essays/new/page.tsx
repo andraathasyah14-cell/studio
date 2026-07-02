@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -59,7 +60,7 @@ export default function NewEssayPage() {
     });
   };
 
-  const handleSave = async (status: 'draft' | 'published') => {
+  const handleSave = (status: 'draft' | 'published') => {
     if (!db || !user) return;
     if (!title) {
       toast({ variant: "destructive", title: "Judul diperlukan", description: "Harap isi judul sebelum menyimpan." });
@@ -68,19 +69,23 @@ export default function NewEssayPage() {
 
     setSaving(true);
     
+    // Normalisasi Tag dan Kategori ke lowercase untuk mencegah duplikasi
+    const normalizedCategory = category.trim().toLowerCase();
+    const normalizedTags = tags.split(',')
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+
     const essayData = {
       title,
       content,
-      category,
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      category: normalizedCategory,
+      tags: normalizedTags,
       status,
       authorId: user.uid,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      confidence: 70,
     };
 
-    // NO await here for instant optimistic update
     const essayRef = collection(db, 'essays');
     addDoc(essayRef, essayData)
       .catch(async (serverError) => {
@@ -98,17 +103,13 @@ export default function NewEssayPage() {
       action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
       timestamp: new Date().toISOString()
     };
-    addDoc(logRef, logData)
-      .catch(async () => {
-        // Silent error for logs
-      });
+    addDoc(logRef, logData).catch(() => {});
 
     toast({
       title: status === 'published' ? "Konten Berhasil Terbit" : "Draf Berhasil Disimpan",
       description: `Esai "${title}" sedang diproses di latar belakang.`,
     });
     
-    // Immediate redirect
     router.push('/admin/AndraNgelantur99/essays');
   };
 
@@ -169,7 +170,7 @@ export default function NewEssayPage() {
                   <Tag className="w-3 h-3" /> Kategori
                 </label>
                 <Input 
-                  placeholder="Ekonomi, AI, dll..." 
+                  placeholder="ekonomi, teknologi, dll..." 
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   disabled={saving}
@@ -181,7 +182,7 @@ export default function NewEssayPage() {
                   <FileText className="w-3 h-3" /> Tags (Koma)
                 </label>
                 <Input 
-                  placeholder="Data, Masa Depan..." 
+                  placeholder="data, masa depan..." 
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   disabled={saving}
@@ -217,31 +218,6 @@ export default function NewEssayPage() {
         <aside className="w-[400px] hidden xl:block border-l border-border bg-card overflow-hidden">
           <AnalysisForm onInsertDraft={handleInsertFromForm} />
         </aside>
-
-        <div className="xl:hidden fixed bottom-6 right-6 z-50">
-          <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <SheetTrigger asChild>
-              <div className="flex flex-col gap-3">
-                <Button size="icon" onClick={handleAIImprove} disabled={improving || saving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
-                  {improving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                </Button>
-                <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver border border-black/10">
-                  <Sparkles className="w-6 h-6" />
-                </Button>
-              </div>
-            </SheetTrigger>
-            <SheetContent side="right" className="p-0 w-full sm:w-[420px] border-l border-border bg-card">
-              <SheetHeader className="p-6 border-b border-border">
-                <SheetTitle className="text-left font-display text-[0.7rem] uppercase tracking-widest flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Form Panduan Berpikir
-                </SheetTitle>
-              </SheetHeader>
-              <div className="h-[calc(100vh-80px)] overflow-hidden">
-                <AnalysisForm onInsertDraft={handleInsertFromForm} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
       </div>
     </div>
   );

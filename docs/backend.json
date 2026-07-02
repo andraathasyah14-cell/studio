@@ -22,7 +22,6 @@
         "content": { "type": "string" },
         "summary": { "type": "string" },
         "tags": { "type": "array", "items": { "type": "string" } },
-        "confidence": { "type": "number" },
         "status": { "type": "string", "enum": ["draft", "published", "scheduled", "deleted"] },
         "category": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -73,22 +74,26 @@ export default function EditEssayPage() {
     }
   };
 
-  const handleUpdate = async (status: 'draft' | 'published') => {
+  const handleUpdate = (status: 'draft' | 'published') => {
     if (!db || !id || !user) return;
     setSaving(true);
     
-    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    // Normalisasi Tag dan Kategori ke lowercase
+    const normalizedCategory = category.trim().toLowerCase();
+    const tagList = tags.split(',')
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+
     const updateData = {
       title,
       content,
-      category,
+      category: normalizedCategory,
       tags: tagList,
       status,
       updatedAt: new Date().toISOString(),
     };
 
     const docRef = doc(db, 'essays', id);
-    // NO await here for instant optimistic update
     updateDoc(docRef, updateData)
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -99,19 +104,17 @@ export default function EditEssayPage() {
         errorEmitter.emit('permission-error', permissionError);
       });
 
-    // Log activity (fire and forget)
     addDoc(collection(db, 'activity_logs'), {
       adminId: user.uid,
       action: `Memperbarui esai: ${title}`,
       timestamp: new Date().toISOString()
-    });
+    }).catch(() => {});
 
     toast({
       title: "Pembaruan Berhasil",
       description: `Perubahan pada "${title}" sedang diproses.`,
     });
     
-    // Immediate redirect
     router.push('/admin/AndraNgelantur99/essays');
   };
 
@@ -217,31 +220,6 @@ export default function EditEssayPage() {
         <aside className="w-[400px] hidden xl:block border-l border-border bg-card overflow-hidden">
           <AnalysisForm onInsertDraft={handleInsertFromForm} />
         </aside>
-
-        <div className="xl:hidden fixed bottom-6 right-6 z-50">
-          <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <SheetTrigger asChild>
-              <div className="flex flex-col gap-3">
-                <Button size="icon" onClick={handleAIImprove} disabled={improving || saving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
-                  {improving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                </Button>
-                <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver border border-black/10">
-                  <Sparkles className="w-6 h-6" />
-                </Button>
-              </div>
-            </SheetTrigger>
-            <SheetContent side="right" className="p-0 w-full sm:w-[420px] border-l border-border bg-card">
-              <SheetHeader className="p-6 border-b border-border">
-                <SheetTitle className="text-left font-display text-[0.7rem] uppercase tracking-widest flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Form Panduan
-                </SheetTitle>
-              </SheetHeader>
-              <div className="h-[calc(100vh-80px)] overflow-hidden">
-                <AnalysisForm onInsertDraft={handleInsertFromForm} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
       </div>
     </div>
   );
