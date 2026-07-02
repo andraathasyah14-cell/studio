@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import Link from "next/link";
@@ -9,8 +9,7 @@ import Link from "next/link";
 export default function Essays() {
   const db = useFirestore();
   
-  // Sederhanakan query untuk menghindari kebutuhan indeks komposit manual yang sering gagal di prototype
-  const essaysQuery = React.useMemo(() => {
+  const essaysQuery = useMemo(() => {
     if (!db) return null;
     return query(
       collection(db, 'essays'), 
@@ -20,11 +19,10 @@ export default function Essays() {
 
   const { data: essays, loading } = useCollection(essaysQuery);
 
-  // Urutkan secara manual di memori agar tetap rapi tanpa indeks komposit
-  const sortedEssays = React.useMemo(() => {
+  const sortedEssays = useMemo(() => {
     if (!essays) return [];
     return [...essays].sort((a: any, b: any) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
     );
   }, [essays]);
 
@@ -61,7 +59,7 @@ export default function Essays() {
               
               <div className="flex flex-col items-start md:items-end gap-3 text-right">
                 <span className="text-[0.7rem] font-bold text-muted-foreground tracking-widest uppercase">
-                  {new Date(essay.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {new Date(essay.updatedAt || essay.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
                 <div className="flex flex-wrap gap-1.5 md:justify-end">
                   {essay.tags?.map((tag: string) => (

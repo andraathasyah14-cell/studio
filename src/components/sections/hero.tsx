@@ -8,7 +8,6 @@ import { collection } from 'firebase/firestore';
 export default function Hero() {
   const db = useFirestore();
   
-  // Memoisasi query untuk mencegah infinite render loop
   const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
   const papersQuery = useMemo(() => db ? collection(db, 'papers') : null, [db]);
   const refsQuery = useMemo(() => db ? collection(db, 'references') : null, [db]);
@@ -20,7 +19,7 @@ export default function Hero() {
   const statsCount = {
     essays: essays?.length || 0,
     papers: papers?.length || 0,
-    books: refs?.filter(r => r.category?.toLowerCase().includes('buku') || r.type === 'book').length || 0,
+    books: refs?.filter(r => r.category?.toLowerCase() === 'buku' || r.type === 'book').length || 0,
     revisions: 0,
     retractions: 0
   };
@@ -34,16 +33,16 @@ export default function Hero() {
           Yang bisa diuji.
         </h1>
         <p className="font-serif text-lg italic text-muted-foreground leading-relaxed max-w-md">
-          Tempat mendokumentasikan cara berpikir — bukan hanya kesimpulannya. Setiap esai datang dengan sumber, asumsi, dan tingkat keyakinan yang eksplisit.
+          Tempat mendokumentasikan cara berpikir — bukan hanya kesimpulannya. Setiap esai datang dengan sumber, asumsi, dan bukti yang terbuka untuk diperiksa.
         </p>
       </div>
       
       <div className="md:col-span-2 space-y-px">
-        <StatRow label="Tulisan" value={statsCount.essays} />
-        <StatRow label="Paper digunakan" value={statsCount.papers} />
-        <StatRow label="Buku dibaca" value={statsCount.books} />
-        <StatRow label="Revisi tulisan" value={statsCount.revisions} />
-        <StatRow label="Opini ditarik" value={statsCount.retractions} />
+        <StatRow label="Tulisan Terbit" value={essays?.filter(e => e.status === 'published').length || 0} />
+        <StatRow label="Paper Riset" value={statsCount.papers} />
+        <StatRow label="Literatur Buku" value={statsCount.books} />
+        <StatRow label="Total Referensi" value={refs?.length || 0} />
+        <StatRow label="Log Aktivitas" value={0} />
       </div>
     </section>
   );
