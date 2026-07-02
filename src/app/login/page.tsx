@@ -37,7 +37,6 @@ export default function LoginPage() {
     }
   }, []);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
       router.push('/admin/AndraNgelantur99');
