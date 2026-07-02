@@ -2,17 +2,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { Search, Filter, Plus, Edit2, Trash2, Eye, MoreVertical } from 'lucide-react';
+import { useCollection, useFirestore, useUser } from '@/firebase';
+import { collection, query, orderBy, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { Search, Filter, Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ContentManagement() {
   const [search, setSearch] = useState('');
   const db = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
 
   const essaysQuery = React.useMemo(() => {
     if (!db) return null;
@@ -26,18 +29,52 @@ export default function ContentManagement() {
     e.category?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = async (id: string) => {
-    if (!db || !window.confirm('Hapus esai ini secara permanen?')) return;
-    await deleteDoc(doc(db, 'essays', id));
+  const handleDelete = async (id: string, title: string) => {
+    if (!db || !user || !window.confirm('Hapus esai ini secara permanen?')) return;
+    try {
+      await deleteDoc(doc(db, 'essays', id));
+      await addDoc(collection(db, 'activity_logs'), {
+        adminId: user.uid,
+        action: `Menghapus esai: ${title}`,
+        timestamp: new Date().toISOString()
+      });
+      toast({
+        title: "Esai Dihapus",
+        description: `"${title}" telah dihapus secara permanen.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Gagal Menghapus",
+        description: error.message,
+      });
+    }
   };
 
-  const togglePublish = async (id: string, currentStatus: string) => {
-    if (!db) return;
+  const togglePublish = async (id: string, title: string, currentStatus: string) => {
+    if (!db || !user) return;
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
-    await updateDoc(doc(db, 'essays', id), {
-      status: newStatus,
-      updatedAt: new Date().toISOString()
-    });
+    try {
+      await updateDoc(doc(db, 'essays', id), {
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      });
+      await addDoc(collection(db, 'activity_logs'), {
+        adminId: user.uid,
+        action: `${newStatus === 'published' ? 'Menerbitkan' : 'Menarik'} esai: ${title}`,
+        timestamp: new Date().toISOString()
+      });
+      toast({
+        title: newStatus === 'published' ? "Konten Diterbitkan" : "Konten Ditarik",
+        description: `Status "${title}" sekarang adalah ${newStatus}.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Gagal Mengubah Status",
+        description: error.message,
+      });
+    }
   };
 
   return (
@@ -121,10 +158,10 @@ export default function ContentManagement() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-card border-border rounded-none text-[0.65rem] uppercase tracking-widest">
-                            <DropdownMenuItem onClick={() => togglePublish(essay.id, essay.status)}>
+                            <DropdownMenuItem onClick={() => togglePublish(essay.id, essay.title, essay.status)}>
                               {essay.status === 'published' ? 'Kembalikan ke Draft' : 'Terbitkan Sekarang'}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(essay.id)} className="text-rose-500">
+                            <DropdownMenuItem onClick={() => handleDelete(essay.id, essay.title)} className="text-rose-500">
                               Hapus Permanen
                             </DropdownMenuItem>
                           </DropdownMenuContent>
