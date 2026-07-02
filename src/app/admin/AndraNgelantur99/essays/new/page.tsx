@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Sparkles, ArrowLeft, Tag, FileText } from 'lucide-react';
+import { Sparkles, ArrowLeft, Tag, FileText, Wand2, Loader2 } from 'lucide-react';
 import AnalysisForm from '@/components/admin/analysis-form';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { improveEssayAction } from '@/app/actions';
 
 export default function NewEssayPage() {
   const [title, setTitle] = useState('');
@@ -21,11 +22,29 @@ export default function NewEssayPage() {
   const [tags, setTags] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [improving, setImproving] = useState(false);
   
   const db = useFirestore();
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+
+  const handleAIImprove = async () => {
+    if (!content) return;
+    setImproving(true);
+    try {
+      const result = await improveEssayAction({ content });
+      setContent(result.improvedContent);
+      toast({
+        title: "Penyempurnaan AI Selesai",
+        description: "Tulisan Anda telah dipertajam oleh AI.",
+      });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "AI Gagal", description: error.message });
+    } finally {
+      setImproving(false);
+    }
+  };
 
   const handleInsertFromForm = (text: string) => {
     setContent(prev => {
@@ -61,7 +80,6 @@ export default function NewEssayPage() {
         confidence: 70,
       });
 
-      // Log activity
       await addDoc(collection(db, 'activity_logs'), {
         adminId: user.uid,
         action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
@@ -94,6 +112,17 @@ export default function NewEssayPage() {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleAIImprove}
+            disabled={improving || !content}
+            className="text-white hover:bg-white/5 text-[0.6rem] uppercase tracking-widest hidden md:flex items-center gap-2"
+          >
+            {improving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+            AI Improve
+          </Button>
+          <div className="w-px h-6 bg-border mx-2 hidden md:block" />
           <Button 
             variant="outline" 
             size="sm" 
@@ -172,9 +201,14 @@ export default function NewEssayPage() {
         <div className="xl:hidden fixed bottom-6 right-6 z-50">
           <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
             <SheetTrigger asChild>
-              <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver border border-black/10">
-                <Sparkles className="w-6 h-6" />
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button size="icon" onClick={handleAIImprove} disabled={improving} className="rounded-full w-12 h-12 shadow-2xl bg-white/10 text-white hover:bg-white/20 border border-white/10">
+                  {improving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
+                </Button>
+                <Button size="icon" className="rounded-full w-14 h-14 shadow-2xl bg-white text-black hover:bg-silver border border-black/10">
+                  <Sparkles className="w-6 h-6" />
+                </Button>
+              </div>
             </SheetTrigger>
             <SheetContent side="right" className="p-0 w-full sm:w-[420px] border-l border-border bg-card">
               <SheetHeader className="p-6 border-b border-border">

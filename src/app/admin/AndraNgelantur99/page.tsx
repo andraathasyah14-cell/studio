@@ -51,7 +51,6 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground text-sm uppercase tracking-widest mt-2">Pusat Kendali Riset & Publikasi</p>
       </header>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border">
         <StatItem 
           label="Total Esai" 
@@ -80,7 +79,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Recent Activity */}
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-[0.65rem] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5" /> Aktivitas Terbaru
@@ -113,7 +111,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Quick Info */}
         <div className="space-y-6">
           <h2 className="text-[0.65rem] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
             Status Publikasi
@@ -132,7 +129,7 @@ export default function AdminDashboard() {
               />
             </div>
             <p className="text-[0.6rem] italic text-muted-foreground leading-relaxed">
-              Database saat ini kosong. Angka yang Anda lihat di website utama sebelum login adalah data dummy. Mulailah menulis untuk mengisi dasbor ini.
+              Database saat ini sinkron. Seluruh data yang Anda buat di sini akan langsung muncul di halaman depan website jika statusnya "Published".
             </p>
           </div>
         </div>
