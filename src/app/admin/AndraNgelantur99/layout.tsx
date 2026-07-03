@@ -18,12 +18,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
-  const userProfileQuery = React.useMemo(() => {
+  const userProfileRef = React.useMemo(() => {
     if (!db || !user?.uid) return null;
     return doc(db, 'users', user.uid);
   }, [db, user?.uid]);
 
-  const { data: profile, loading: profileLoading } = useDoc(userProfileQuery);
+  const { data: profile, loading: profileLoading } = useDoc(userProfileRef);
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -45,19 +45,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         localStorage.removeItem(`is_admin_${user?.uid}`);
         router.push('/');
       }
-    } else if (!profileLoading && user && !profile) {
+    } else if (!profileLoading && user && !profile && db) {
       const createProfile = async () => {
-        if (!db || !user) return;
         const profileData = {
           uid: user.uid,
-          email: user.email,
+          email: user.email || '',
           name: user.displayName || 'Admin',
           admin: true,
           createdAt: new Date().toISOString()
         };
-        await setDoc(doc(db, 'users', user.uid), profileData);
-        setIsAdmin(true);
-        localStorage.setItem(`is_admin_${user?.uid}`, 'true');
+        // Persist the admin user in Firestore
+        try {
+          await setDoc(doc(db, 'users', user.uid), profileData);
+          setIsAdmin(true);
+          localStorage.setItem(`is_admin_${user?.uid}`, 'true');
+        } catch (e) {
+          console.error("Error creating admin profile:", e);
+        }
       };
       createProfile();
     }
