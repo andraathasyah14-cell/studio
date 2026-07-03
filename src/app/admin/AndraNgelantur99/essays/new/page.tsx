@@ -121,9 +121,12 @@ export default function NewEssayPage() {
       updatedAt: now,
     };
 
+    console.log("Mulai menulis ke Firestore...", essayData);
+
     try {
-      // Menggunakan await agar kita yakin data tersimpan sebelum pindah halaman
-      await addDoc(collection(db, 'essays'), essayData);
+      // WAJIB AWAIT: Pastikan data tertulis ke Cloud Firestore sebelum redirect
+      const docRef = await addDoc(collection(db, 'essays'), essayData);
+      console.log("Berhasil menulis dokumen dengan ID:", docRef.id);
       
       await addDoc(collection(db, 'activity_logs'), {
         adminId: user.uid,
@@ -144,6 +147,8 @@ export default function NewEssayPage() {
       router.push('/admin/AndraNgelantur99/essays');
     } catch (error: any) {
       setSaving(false);
+      console.error("Gagal menulis ke Firestore:", error);
+      
       const permissionError = new FirestorePermissionError({
         path: 'essays',
         operation: 'create',

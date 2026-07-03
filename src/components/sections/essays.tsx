@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -9,6 +10,7 @@ import Link from "next/link";
 export default function Essays() {
   const db = useFirestore();
   
+  // Single Source of Truth: Membaca langsung dari Firestore collection 'essays'
   const essaysQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
@@ -21,6 +23,7 @@ export default function Essays() {
 
   const sortedEssays = useMemo(() => {
     if (!essays) return [];
+    console.log(`Ditemukan ${essays.length} esai terbit dari Firestore.`);
     return [...essays].sort((a: any, b: any) => 
       new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
     );
