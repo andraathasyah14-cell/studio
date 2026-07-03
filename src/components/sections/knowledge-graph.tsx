@@ -7,13 +7,13 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
   BarChart, Bar, XAxis, YAxis, CartesianGrid 
 } from 'recharts';
-import { LayoutGrid, PieChart as PieIcon, BarChart3, Info } from 'lucide-react';
+import { LayoutGrid, PieChart as PieIcon, BarChart3, Info, X } from 'lucide-react';
 import {
-  Tooltip as UITooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 export default function TopicDistribution() {
   const db = useFirestore();
@@ -154,37 +154,59 @@ export default function TopicDistribution() {
       
       {/* Footer Info dengan penjelasan perbedaan */}
       <div className="mt-8 flex justify-center">
-        <TooltipProvider>
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-center">
-              <span className="text-xl font-display font-bold text-white">{topicData.length}</span>
-              <UITooltip>
-                <TooltipTrigger className="flex items-center gap-1">
-                  <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Total Topik Unik</span>
-                  <Info className="w-2.5 h-2.5 text-muted-foreground/50" />
-                </TooltipTrigger>
-                <TooltipContent className="bg-card border-border rounded-none text-[0.6rem] uppercase tracking-widest max-w-[200px]">
-                  Jumlah kategori berbeda yang pernah Anda bahas.
-                </TooltipContent>
-              </UITooltip>
-            </div>
-            
-            <div className="w-px h-8 bg-border" />
-            
-            <div className="flex flex-col items-center">
-              <span className="text-xl font-display font-bold text-white">{totalConnections}</span>
-              <UITooltip>
-                <TooltipTrigger className="flex items-center gap-1">
-                  <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Kaitan Pengetahuan</span>
-                  <Info className="w-2.5 h-2.5 text-muted-foreground/50" />
-                </TooltipTrigger>
-                <TooltipContent className="bg-card border-border rounded-none text-[0.6rem] uppercase tracking-widest max-w-[200px]">
-                  Total kumulatif penggunaan tag di seluruh esai Anda.
-                </TooltipContent>
-              </UITooltip>
-            </div>
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-display font-bold text-white">{topicData.length}</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 group outline-none">
+                  <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground group-hover:text-white transition-colors font-bold">Total Topik Unik</span>
+                  <Info className="w-2.5 h-2.5 text-muted-foreground/50 group-hover:text-white transition-colors" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="bg-card border-border rounded-none text-[0.7rem] p-4 max-w-[250px] space-y-3 shadow-2xl">
+                <div className="flex justify-between items-center border-b border-border pb-2">
+                  <span className="uppercase tracking-[0.2em] font-bold text-[0.6rem] text-muted-foreground">Informasi</span>
+                  <PopoverTrigger asChild>
+                    <button className="text-muted-foreground hover:text-white"><X className="w-3 h-3" /></button>
+                  </PopoverTrigger>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Menghitung berapa banyak <strong className="text-white">kategori/label berbeda</strong> yang Anda miliki. 
+                  <br/><br/>
+                  <span className="italic">Contoh: Jika Anda menulis tentang "Ekonomi", "Hukum", dan "Politik", maka jumlahnya adalah 3.</span>
+                </p>
+              </PopoverContent>
+            </Popover>
           </div>
-        </TooltipProvider>
+          
+          <div className="w-px h-8 bg-border" />
+          
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-display font-bold text-white">{totalConnections}</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 group outline-none">
+                  <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground group-hover:text-white transition-colors font-bold">Kaitan Pengetahuan</span>
+                  <Info className="w-2.5 h-2.5 text-muted-foreground/50 group-hover:text-white transition-colors" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="bg-card border-border rounded-none text-[0.7rem] p-4 max-w-[250px] space-y-3 shadow-2xl">
+                <div className="flex justify-between items-center border-b border-border pb-2">
+                  <span className="uppercase tracking-[0.2em] font-bold text-[0.6rem] text-muted-foreground">Informasi</span>
+                  <PopoverTrigger asChild>
+                    <button className="text-muted-foreground hover:text-white"><X className="w-3 h-3" /></button>
+                  </PopoverTrigger>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Menghitung <strong className="text-white">total seluruh penggunaan tag</strong> di semua esai Anda. 
+                  <br/><br/>
+                  <span className="italic">Contoh: Jika tag "Ekonomi" muncul di 5 esai dan "Hukum" di 2 esai, maka total kaitannya adalah 7. Ini menunjukkan seberapa padat jaringan pemikiran Anda.</span>
+                </p>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
       </div>
     </section>
   );
