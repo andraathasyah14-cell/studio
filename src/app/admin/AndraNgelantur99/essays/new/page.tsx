@@ -95,7 +95,7 @@ export default function NewEssayPage() {
     }
   };
 
-  const handleSave = async (status: 'published' | 'draft') => {
+  const handleSave = (status: 'published' | 'draft') => {
     if (!db || !user) return;
     if (!title) {
       toast({ variant: "destructive", title: "Judul Kosong", description: "Harap isi judul sebelum menyimpan." });
@@ -121,37 +121,35 @@ export default function NewEssayPage() {
       updatedAt: now,
     };
 
-    try {
-      // WAJIB AWAIT untuk esai agar data tidak hilang saat refresh
-      await addDoc(collection(db, 'essays'), essayData);
-      
-      // NON-BLOCKING untuk log aktivitas agar tidak menambah beban waktu tunggu
-      addDoc(collection(db, 'activity_logs'), {
-        adminId: user.uid,
-        action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
-        timestamp: now
-      }).catch(() => {});
-
-      localStorage.removeItem('andra_draft_title');
-      localStorage.removeItem('andra_draft_content');
-      localStorage.removeItem('andra_draft_category');
-      localStorage.removeItem('andra_draft_tags');
-
-      toast({
-        title: status === 'published' ? "Terbit" : "Draf Disimpan",
-        description: `Esai "${title}" berhasil disimpan secara permanen.`,
+    // INSTANT WRITE: Kirim ke server di latar belakang
+    addDoc(collection(db, 'essays'), essayData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'essays',
+          operation: 'create',
+          requestResourceData: essayData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
       
-      router.push('/admin/AndraNgelantur99/essays');
-    } catch (error: any) {
-      setSaving(false);
-      const permissionError = new FirestorePermissionError({
-        path: 'essays',
-        operation: 'create',
-        requestResourceData: essayData,
-      } satisfies SecurityRuleContext);
-      errorEmitter.emit('permission-error', permissionError);
-    }
+    addDoc(collection(db, 'activity_logs'), {
+      adminId: user.uid,
+      action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
+      timestamp: now
+    }).catch(() => {});
+
+    // INSTANT REDIRECT: Jangan tunggu server
+    localStorage.removeItem('andra_draft_title');
+    localStorage.removeItem('andra_draft_content');
+    localStorage.removeItem('andra_draft_category');
+    localStorage.removeItem('andra_draft_tags');
+
+    toast({
+      title: status === 'published' ? "Terbit" : "Draf Disimpan",
+      description: `Esai "${title}" sedang diunggah ke database.`,
+    });
+    
+    router.push('/admin/AndraNgelantur99/essays');
   };
 
   if (!isInitialized) return null;

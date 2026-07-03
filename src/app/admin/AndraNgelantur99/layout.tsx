@@ -32,11 +32,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user, userLoading, router]);
 
   useEffect(() => {
-    // Check local cache for admin status to prevent flicker
     const cachedAdmin = localStorage.getItem(`is_admin_${user?.uid}`);
-    if (cachedAdmin === 'true') setIsAdmin(true);
+    if (cachedAdmin === 'true') {
+      setIsAdmin(true);
+    }
 
-    if (profile) {
+    if (!profileLoading && profile) {
       if (profile.admin === true) {
         setIsAdmin(true);
         localStorage.setItem(`is_admin_${user?.uid}`, 'true');
@@ -45,27 +46,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         localStorage.removeItem(`is_admin_${user?.uid}`);
         router.push('/');
       }
-    } else if (!profileLoading && user && !profile && db) {
-      const createProfile = async () => {
-        const profileData = {
-          uid: user.uid,
-          email: user.email || '',
-          name: user.displayName || 'Admin',
-          admin: true,
-          createdAt: new Date().toISOString()
-        };
-        // Persist the admin user in Firestore
-        try {
-          await setDoc(doc(db, 'users', user.uid), profileData);
+    } else if (!profileLoading && user && !profile && db && isAdmin === null) {
+      // Hanya buat profile jika benar-benar tidak ada dan tidak sedang memuat
+      const profileData = {
+        uid: user.uid,
+        email: user.email || '',
+        name: user.displayName || 'Admin',
+        admin: true,
+        createdAt: new Date().toISOString()
+      };
+      
+      setDoc(doc(db, 'users', user.uid), profileData)
+        .then(() => {
           setIsAdmin(true);
           localStorage.setItem(`is_admin_${user?.uid}`, 'true');
-        } catch (e) {
-          console.error("Error creating admin profile:", e);
-        }
-      };
-      createProfile();
+        })
+        .catch(console.error);
     }
-  }, [profile, profileLoading, user, db, router]);
+  }, [profile, profileLoading, user, db, router, isAdmin]);
 
   const handleLogout = async () => {
     if (auth) {
