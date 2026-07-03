@@ -74,7 +74,7 @@ export default function EditEssayPage() {
     }
   };
 
-  const handleUpdate = (status: 'draft' | 'published') => {
+  const handleUpdate = async (status: 'published' | 'draft') => {
     if (!db || !id || !user) return;
     setSaving(true);
     
@@ -94,28 +94,32 @@ export default function EditEssayPage() {
 
     const docRef = doc(db, 'essays', id);
     
-    updateDoc(docRef, updateData)
-      .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: docRef.path,
-          operation: 'update',
-          requestResourceData: updateData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
+    try {
+      // WAJIB AWAIT untuk esai utama agar data tersimpan permanen
+      await updateDoc(docRef, updateData);
+      
+      // NON-BLOCKING untuk log aktivitas
+      addDoc(collection(db, 'activity_logs'), {
+        adminId: user.uid,
+        action: `Update esai: ${title} (${status})`,
+        timestamp: new Date().toISOString()
+      }).catch(() => {});
+
+      toast({
+        title: "Tersimpan",
+        description: `Perubahan pada "${title}" telah disinkronkan.`,
       });
-
-    addDoc(collection(db, 'activity_logs'), {
-      adminId: user.uid,
-      action: `Update esai: ${title}`,
-      timestamp: new Date().toISOString()
-    }).catch(() => {});
-
-    toast({
-      title: "Tersimpan",
-      description: `Perubahan pada "${title}" telah disinkronkan.`,
-    });
-    
-    router.push('/admin/AndraNgelantur99/essays');
+      
+      router.push('/admin/AndraNgelantur99/essays');
+    } catch (error: any) {
+      setSaving(false);
+      const permissionError = new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'update',
+        requestResourceData: updateData,
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    }
   };
 
   if (loading) return <div className="p-20 text-center uppercase tracking-widest text-[0.6rem]">Memuat data...</div>;

@@ -95,7 +95,7 @@ export default function NewEssayPage() {
     }
   };
 
-  const handleSave = async (status: 'draft' | 'published') => {
+  const handleSave = async (status: 'published' | 'draft') => {
     if (!db || !user) return;
     if (!title) {
       toast({ variant: "destructive", title: "Judul Kosong", description: "Harap isi judul sebelum menyimpan." });
@@ -121,18 +121,16 @@ export default function NewEssayPage() {
       updatedAt: now,
     };
 
-    console.log("Mulai menulis ke Firestore...", essayData);
-
     try {
-      // WAJIB AWAIT: Pastikan data tertulis ke Cloud Firestore sebelum redirect
-      const docRef = await addDoc(collection(db, 'essays'), essayData);
-      console.log("Berhasil menulis dokumen dengan ID:", docRef.id);
+      // WAJIB AWAIT untuk esai agar data tidak hilang saat refresh
+      await addDoc(collection(db, 'essays'), essayData);
       
-      await addDoc(collection(db, 'activity_logs'), {
+      // NON-BLOCKING untuk log aktivitas agar tidak menambah beban waktu tunggu
+      addDoc(collection(db, 'activity_logs'), {
         adminId: user.uid,
         action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
         timestamp: now
-      });
+      }).catch(() => {});
 
       localStorage.removeItem('andra_draft_title');
       localStorage.removeItem('andra_draft_content');
@@ -147,8 +145,6 @@ export default function NewEssayPage() {
       router.push('/admin/AndraNgelantur99/essays');
     } catch (error: any) {
       setSaving(false);
-      console.error("Gagal menulis ke Firestore:", error);
-      
       const permissionError = new FirestorePermissionError({
         path: 'essays',
         operation: 'create',
