@@ -7,7 +7,13 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
   BarChart, Bar, XAxis, YAxis, CartesianGrid 
 } from 'recharts';
-import { LayoutGrid, PieChart as PieIcon, BarChart3 } from 'lucide-react';
+import { LayoutGrid, PieChart as PieIcon, BarChart3, Info } from 'lucide-react';
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function TopicDistribution() {
   const db = useFirestore();
@@ -36,6 +42,10 @@ export default function TopicDistribution() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
   }, [essays]);
+
+  const totalConnections = useMemo(() => {
+    return topicData.reduce((acc, curr) => acc + curr.value, 0);
+  }, [topicData]);
 
   const COLORS = ['#FFFFFF', '#A1A1AA', '#71717A', '#52525B', '#3F3F46', '#27272A'];
 
@@ -142,21 +152,39 @@ export default function TopicDistribution() {
         </div>
       </div>
       
-      {/* Footer Info */}
+      {/* Footer Info dengan penjelasan perbedaan */}
       <div className="mt-8 flex justify-center">
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-display font-bold text-white">{topicData.length}</span>
-            <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Total Topik Unik</span>
+        <TooltipProvider>
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-center">
+              <span className="text-xl font-display font-bold text-white">{topicData.length}</span>
+              <UITooltip>
+                <TooltipTrigger className="flex items-center gap-1">
+                  <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Total Topik Unik</span>
+                  <Info className="w-2.5 h-2.5 text-muted-foreground/50" />
+                </TooltipTrigger>
+                <TooltipContent className="bg-card border-border rounded-none text-[0.6rem] uppercase tracking-widest max-w-[200px]">
+                  Jumlah kategori berbeda yang pernah Anda bahas.
+                </TooltipContent>
+              </UITooltip>
+            </div>
+            
+            <div className="w-px h-8 bg-border" />
+            
+            <div className="flex flex-col items-center">
+              <span className="text-xl font-display font-bold text-white">{totalConnections}</span>
+              <UITooltip>
+                <TooltipTrigger className="flex items-center gap-1">
+                  <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Kaitan Pengetahuan</span>
+                  <Info className="w-2.5 h-2.5 text-muted-foreground/50" />
+                </TooltipTrigger>
+                <TooltipContent className="bg-card border-border rounded-none text-[0.6rem] uppercase tracking-widest max-w-[200px]">
+                  Total kumulatif penggunaan tag di seluruh esai Anda.
+                </TooltipContent>
+              </UITooltip>
+            </div>
           </div>
-          <div className="w-px h-8 bg-border" />
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-display font-bold text-white">
-              {topicData.reduce((acc, curr) => acc + curr.value, 0)}
-            </span>
-            <span className="text-[0.5rem] uppercase tracking-widest text-muted-foreground">Total Kaitan Topik</span>
-          </div>
-        </div>
+        </TooltipProvider>
       </div>
     </section>
   );
