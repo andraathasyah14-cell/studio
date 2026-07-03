@@ -2,27 +2,26 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
 export default function Hero() {
   const db = useFirestore();
   
-  const essaysQuery = useMemo(() => db ? collection(db, 'essays') : null, [db]);
-  const papersQuery = useMemo(() => db ? collection(db, 'papers') : null, [db]);
-  const refsQuery = useMemo(() => db ? collection(db, 'references') : null, [db]);
+  const essaysRef = useMemoFirebase(() => db ? collection(db, 'essays') : null, [db]);
+  const papersRef = useMemoFirebase(() => db ? collection(db, 'papers') : null, [db]);
+  const refsRef = useMemoFirebase(() => db ? collection(db, 'references') : null, [db]);
 
-  const { data: essays } = useCollection(essaysQuery);
-  const { data: papers } = useCollection(papersQuery);
-  const { data: refs } = useCollection(refsQuery);
+  const { data: essays } = useCollection(essaysRef);
+  const { data: papers } = useCollection(papersRef);
+  const { data: refs } = useCollection(refsRef);
 
-  const statsCount = {
-    essays: essays?.length || 0,
+  const statsCount = useMemo(() => ({
+    essays: essays?.filter(e => e.status === 'published').length || 0,
     papers: papers?.length || 0,
-    books: refs?.filter(r => r.category?.toLowerCase() === 'buku' || r.type === 'book').length || 0,
-    revisions: 0,
-    retractions: 0
-  };
+    books: refs?.filter(r => r.category?.toLowerCase() === 'buku').length || 0,
+    totalRefs: refs?.length || 0,
+  }), [essays, papers, refs]);
 
   return (
     <section id="home" className="py-24 px-6 border-b border-border grid grid-cols-1 md:grid-cols-5 gap-16 items-end">
@@ -38,10 +37,10 @@ export default function Hero() {
       </div>
       
       <div className="md:col-span-2 space-y-px">
-        <StatRow label="Tulisan Terbit" value={essays?.filter(e => e.status === 'published').length || 0} />
+        <StatRow label="Tulisan Terbit" value={statsCount.essays} />
         <StatRow label="Paper Riset" value={statsCount.papers} />
         <StatRow label="Literatur Buku" value={statsCount.books} />
-        <StatRow label="Total Referensi" value={refs?.length || 0} />
+        <StatRow label="Total Referensi" value={statsCount.totalRefs} />
         <StatRow label="Log Aktivitas" value={0} />
       </div>
     </section>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,8 +16,8 @@ export default function Home() {
   const [isEntered, setIsEntered] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Cek apakah user sudah masuk sebelumnya di sesi ini
-    const savedEntry = sessionStorage.getItem('andra_ngelantur_entered');
+    // Gunakan localStorage agar status "sudah masuk" tetap ada meski browser di-refresh
+    const savedEntry = localStorage.getItem('andra_ngelantur_entered');
     setIsEntered(savedEntry === 'true');
   }, []);
 
@@ -27,7 +28,7 @@ export default function Home() {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
-      sessionStorage.setItem('andra_ngelantur_entered', 'true');
+      localStorage.setItem('andra_ngelantur_entered', 'true');
     }
   }, [isEntered]);
 

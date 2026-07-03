@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   onSnapshot,
   Query,
@@ -14,18 +15,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const queryRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!query) {
       setLoading(false);
+      setData(null);
       return;
     }
-
-    // Hindari re-subscribe jika string query sama (stabilitas ekstra)
-    const currentQueryStr = JSON.stringify((query as any)._query || query.toString());
-    if (queryRef.current === currentQueryStr) return;
-    queryRef.current = currentQueryStr;
 
     setLoading(true);
     const unsubscribe = onSnapshot(
@@ -39,20 +35,20 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setLoading(false);
       },
       async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: (query as any)._query?.path?.toString() || 'unknown',
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        // Deteksi apakah error karena masalah security rules
+        if (serverError.code === 'permission-denied') {
+          const permissionError = new FirestorePermissionError({
+            path: 'collection',
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        }
         setError(serverError);
         setLoading(false);
       }
     );
 
-    return () => {
-      unsubscribe();
-      queryRef.current = null;
-    };
+    return () => unsubscribe();
   }, [query]);
 
   return { data, loading, error };

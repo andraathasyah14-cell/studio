@@ -2,14 +2,14 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import Link from "next/link";
 
 export default function Essays() {
   const db = useFirestore();
   
-  const essaysQuery = useMemo(() => {
+  const essaysQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(
       collection(db, 'essays'), 
@@ -26,7 +26,7 @@ export default function Essays() {
     );
   }, [essays]);
 
-  if (loading) return (
+  if (loading && !essays) return (
     <div className="py-20 px-6 text-center text-[0.6rem] uppercase tracking-widest text-muted-foreground">
       Membuka Arsip Esai...
     </div>
@@ -40,7 +40,7 @@ export default function Essays() {
       </div>
 
       <div className="divide-y divide-border">
-        {sortedEssays && sortedEssays.length > 0 ? (
+        {sortedEssays.length > 0 ? (
           sortedEssays.map((essay: any) => (
             <div key={essay.id} className="group py-10 first:pt-0 last:pb-0 grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="md:col-span-3 space-y-4">
