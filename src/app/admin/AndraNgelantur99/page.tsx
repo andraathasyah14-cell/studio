@@ -40,7 +40,8 @@ export default function AdminDashboard() {
     published: essays?.filter(e => e.status === 'published').length || 0,
     drafts: essays?.filter(e => e.status === 'draft').length || 0,
     totalPapers: papers?.length || 0,
-    totalRefs: refs?.length || 0,
+    // Gabungan seluruh referensi (Paper + Ref bank)
+    totalRefs: (papers?.length || 0) + (refs?.length || 0),
     scheduled: essays?.filter(e => e.status === 'scheduled').length || 0,
   };
 
@@ -65,10 +66,10 @@ export default function AdminDashboard() {
           loading={papersLoading}
         />
         <StatItem 
-          label="Bank Referensi" 
+          label="Total Referensi" 
           value={stats.totalRefs} 
           icon={<Library className="w-4 h-4" />} 
-          loading={refsLoading}
+          loading={refsLoading || papersLoading}
         />
         <StatItem 
           label="Status Terbit" 

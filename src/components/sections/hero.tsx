@@ -22,7 +22,8 @@ export default function Hero() {
     essays: essays?.filter(e => e.status === 'published').length || 0,
     papers: papers?.length || 0,
     books: refs?.filter(r => r.category?.toLowerCase() === 'buku').length || 0,
-    totalRefs: refs?.length || 0,
+    // Total Referensi sekarang adalah gabungan Paper + Bank Referensi
+    totalRefs: (papers?.length || 0) + (refs?.length || 0),
     totalLogs: logs?.length || 0,
   }), [essays, papers, refs, logs]);
 
@@ -43,7 +44,7 @@ export default function Hero() {
         <StatRow label="Tulisan Terbit" value={statsCount.essays} />
         <StatRow label="Paper Riset" value={statsCount.papers} />
         <StatRow label="Literatur Buku" value={statsCount.books} />
-        <StatRow label="Total Referensi" value={statsCount.totalRefs} />
+        <StatRow label="Basis Pengetahuan" value={statsCount.totalRefs} />
         <StatRow label="Log Aktivitas" value={statsCount.totalLogs} />
       </div>
     </section>
