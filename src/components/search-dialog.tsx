@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -38,7 +38,7 @@ export function SearchDialog({ isOpen, onOpenChange }: SearchDialogProps) {
       .map(p => ({ id: p.id, title: p.title, type: 'paper', icon: BookOpen, href: '/pustaka' }));
 
     const refResults = (refs || [])
-      .filter(r => r.title.toLowerCase().includes(r) || r.quote?.toLowerCase().includes(q))
+      .filter(r => r.title.toLowerCase().includes(q) || r.quote?.toLowerCase().includes(q))
       .map(r => ({ id: r.id, title: r.title, type: 'reference', icon: Library, href: '/pustaka' }));
 
     return [...essayResults, ...paperResults, ...refResults].slice(0, 10);
@@ -48,6 +48,10 @@ export function SearchDialog({ isOpen, onOpenChange }: SearchDialogProps) {
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px] bg-card border-border p-0 gap-0 overflow-hidden rounded-none">
         <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle className="sr-only">Pencarian Universal</DialogTitle>
+          <DialogDescription className="sr-only">
+            Gunakan kolom di bawah untuk mencari esai, paper, dan referensi di seluruh database.
+          </DialogDescription>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
