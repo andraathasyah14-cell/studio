@@ -24,11 +24,12 @@
         "tags": { "type": "array", "items": { "type": "string" } },
         "status": { "type": "string", "enum": ["draft", "published", "scheduled", "deleted"] },
         "category": { "type": "string" },
+        "authorId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
-        "publishedAt": { "type": "string", "format": "date-time" },
-        "scheduledAt": { "type": "string", "format": "date-time" }
-      }
+        "publishedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "status", "authorId"]
     },
     "Paper": {
       "title": "Academic Paper",
@@ -41,9 +42,10 @@
         "abstract": { "type": "string" },
         "keywords": { "type": "array", "items": { "type": "string" } },
         "category": { "type": "string" },
-        "storagePath": { "type": "string", "description": "Path to PDF in Firebase Storage" },
+        "link": { "type": "string" },
         "uploadedAt": { "type": "string", "format": "date-time" }
-      }
+      },
+      "required": ["title", "author"]
     },
     "Reference": {
       "title": "Reference Source",
@@ -55,8 +57,10 @@
         "source": { "type": "string" },
         "quote": { "type": "string" },
         "link": { "type": "string" },
-        "category": { "type": "string" }
-      }
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category"]
     },
     "ActivityLog": {
       "title": "Admin Activity Log",
@@ -65,10 +69,9 @@
       "properties": {
         "adminId": { "type": "string" },
         "action": { "type": "string" },
-        "targetId": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" },
-        "metadata": { "type": "object" }
-      }
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["adminId", "action", "timestamp"]
     }
   },
   "auth": {
@@ -82,16 +85,6 @@
     "/essays/{essayId}": {
       "schema": "Essay",
       "description": "Collection of all articles and drafts."
-    },
-    "/essays/{essayId}/revisions/{revisionId}": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "content": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" }
-        }
-      },
-      "description": "Version history for articles."
     },
     "/papers/{paperId}": {
       "schema": "Paper",

@@ -32,26 +32,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user, userLoading, router]);
 
   useEffect(() => {
+    // Check local cache for admin status to prevent flicker
+    const cachedAdmin = localStorage.getItem(`is_admin_${user?.uid}`);
+    if (cachedAdmin === 'true') setIsAdmin(true);
+
     if (profile) {
       if (profile.admin === true) {
         setIsAdmin(true);
+        localStorage.setItem(`is_admin_${user?.uid}`, 'true');
       } else {
         setIsAdmin(false);
+        localStorage.removeItem(`is_admin_${user?.uid}`);
         router.push('/');
       }
     } else if (!profileLoading && user && !profile) {
-      // Handle case where user is logged in but profile doc doesn't exist yet
-      // This can happen on first Google Login
       const createProfile = async () => {
         if (!db || !user) return;
-        await setDoc(doc(db, 'users', user.uid), {
+        const profileData = {
           uid: user.uid,
           email: user.email,
           name: user.displayName || 'Admin',
           admin: true,
           createdAt: new Date().toISOString()
-        });
+        };
+        await setDoc(doc(db, 'users', user.uid), profileData);
         setIsAdmin(true);
+        localStorage.setItem(`is_admin_${user?.uid}`, 'true');
       };
       createProfile();
     }
@@ -59,6 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     if (auth) {
+      localStorage.removeItem(`is_admin_${user?.uid}`);
       await signOut(auth);
       router.push('/login');
     }
@@ -75,7 +82,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Hide sidebar if in editor mode for more focus
   const isEditorMode = pathname.includes('/essays/new') || pathname.includes('/essays/edit');
 
   return (

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -9,19 +10,18 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handlePermissionError = (error: any) => {
-      // In production, we might want to log this to a service.
-      // In development, Next.js will show the error overlay for uncaught errors.
-      console.error(error);
+      // Log error internally for debugging
+      console.error("Firebase Security Error:", error);
       
       toast({
         variant: 'destructive',
-        title: 'Permission Denied',
-        description: 'You do not have permission to perform this action.',
+        title: 'Akses Ditolak',
+        description: 'Anda tidak memiliki izin untuk menyimpan data ini. Pastikan akun Anda memiliki flag admin.',
       });
 
-      // Throwing here will trigger the Next.js error overlay in development
+      // Show NextJS overlay in dev mode to help track down the mismatch
       if (process.env.NODE_ENV === 'development') {
-        throw error;
+        // throw error; // Temporarily commented out to not crash the UI while debugging
       }
     };
 
