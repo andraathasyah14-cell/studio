@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -13,6 +12,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  PopoverClose,
 } from "@/components/ui/popover";
 
 export default function TopicDistribution() {
@@ -149,8 +149,9 @@ export default function TopicDistribution() {
       
       <div className="mt-12 flex justify-center">
         <div className="flex items-center gap-12">
+          {/* Topik Unik Item */}
           <div className="flex flex-col items-center">
-            <span className="text-2xl font-display font-bold text-white">{topicData.length}</span>
+            <span className="text-2xl font-display font-bold text-white mb-1">{topicData.length}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1.5 outline-none group">
@@ -158,12 +159,12 @@ export default function TopicDistribution() {
                   <Info className="w-3 h-3 text-muted-foreground/40 group-hover:text-white transition-colors" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="top" className="bg-card border-border rounded-none text-[0.7rem] p-5 w-[280px] space-y-3 shadow-2xl z-[60]">
+              <PopoverContent side="top" sideOffset={10} className="bg-card border-border rounded-none text-[0.7rem] p-5 w-[280px] space-y-3 shadow-2xl z-[60] animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center border-b border-border pb-2">
                   <span className="uppercase tracking-[0.2em] font-bold text-[0.6rem] text-muted-foreground">Informasi Topik</span>
-                  <PopoverTrigger asChild>
-                    <button className="text-muted-foreground hover:text-white transition-colors"><X className="w-3.5 h-3.5" /></button>
-                  </PopoverTrigger>
+                  <PopoverClose className="text-muted-foreground hover:text-white transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </PopoverClose>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
                   Menghitung berapa banyak <strong className="text-white">kategori atau label berbeda</strong> yang Anda gunakan di seluruh esai.
@@ -176,8 +177,9 @@ export default function TopicDistribution() {
           
           <div className="w-px h-10 bg-border" />
           
+          {/* Kaitan Pengetahuan Item */}
           <div className="flex flex-col items-center">
-            <span className="text-2xl font-display font-bold text-white">{totalConnections}</span>
+            <span className="text-2xl font-display font-bold text-white mb-1">{totalConnections}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-1.5 outline-none group">
@@ -185,12 +187,12 @@ export default function TopicDistribution() {
                   <Info className="w-3 h-3 text-muted-foreground/40 group-hover:text-white transition-colors" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="top" className="bg-card border-border rounded-none text-[0.7rem] p-5 w-[280px] space-y-3 shadow-2xl z-[60]">
+              <PopoverContent side="top" sideOffset={10} className="bg-card border-border rounded-none text-[0.7rem] p-5 w-[280px] space-y-3 shadow-2xl z-[60] animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center border-b border-border pb-2">
                   <span className="uppercase tracking-[0.2em] font-bold text-[0.6rem] text-muted-foreground">Informasi Kaitan</span>
-                  <PopoverTrigger asChild>
-                    <button className="text-muted-foreground hover:text-white transition-colors"><X className="w-3.5 h-3.5" /></button>
-                  </PopoverTrigger>
+                  <PopoverClose className="text-muted-foreground hover:text-white transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </PopoverClose>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
                   Menghitung <strong className="text-white">total akumulasi penggunaan tag</strong> di semua esai. 
