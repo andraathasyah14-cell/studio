@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore, useCollection } from '@/firebase';
+import { useParams } from 'next/navigation';
+import { useDoc, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where, limit } from 'firebase/firestore';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
@@ -15,22 +16,20 @@ export default function EssayDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const db = useFirestore();
-  const router = useRouter();
   const { toast } = useToast();
 
-  const essayRef = React.useMemo(() => (id && db ? doc(db, 'essays', id) : null), [id, db]);
+  const essayRef = useMemoFirebase(() => (id && db ? doc(db, 'essays', id) : null), [id, db]);
   const { data: essay, loading } = useDoc(essayRef);
 
   // Hitung Estimasi Waktu Baca
   const readingTime = useMemo(() => {
     if (!essay?.content) return 1;
     const words = essay.content.split(/\s+/).length;
-    const minutes = Math.ceil(words / 200); // Rata-rata 200 kata per menit
-    return minutes;
+    return Math.ceil(words / 200);
   }, [essay?.content]);
 
-  // Cari Esai Terkait (berdasarkan tag pertama)
-  const relatedQuery = useMemo(() => {
+  // Cari Esai Terkait
+  const relatedQuery = useMemoFirebase(() => {
     if (!db || !essay?.tags || essay.tags.length === 0) return null;
     return query(
       collection(db, 'essays'),
@@ -95,7 +94,7 @@ export default function EssayDetailPage() {
             <div className="flex flex-wrap items-center gap-4 text-[0.65rem] uppercase tracking-widest text-muted-foreground font-bold">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
-                {new Date(essay.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {essay.updatedAt ? new Date(essay.updatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
               </span>
               <span className="h-3 w-px bg-border" />
               <span className="flex items-center gap-1.5">
@@ -133,7 +132,6 @@ export default function EssayDetailPage() {
           </div>
         </article>
 
-        {/* Related Content Section */}
         {filteredRelated && filteredRelated.length > 0 && (
           <section className="mt-32 pt-16 border-t border-border space-y-10">
             <h3 className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground font-bold text-center">
@@ -143,7 +141,7 @@ export default function EssayDetailPage() {
               {filteredRelated.map((rel) => (
                 <Link key={rel.id} href={`/essay/${rel.id}`} className="group space-y-4 p-6 border border-border hover:border-white/20 transition-all bg-white/[0.01]">
                   <span className="text-[0.55rem] uppercase tracking-widest text-muted-foreground block">
-                    {new Date(rel.updatedAt).toLocaleDateString('id-ID')}
+                    {rel.updatedAt ? new Date(rel.updatedAt).toLocaleDateString('id-ID') : '-'}
                   </span>
                   <h4 className="font-display text-lg font-bold text-white group-hover:text-primary transition-colors leading-tight">
                     {rel.title}

@@ -95,7 +95,7 @@ export default function NewEssayPage() {
     }
   };
 
-  const handleSave = (status: 'draft' | 'published') => {
+  const handleSave = async (status: 'draft' | 'published') => {
     if (!db || !user) return;
     if (!title) {
       toast({ variant: "destructive", title: "Judul Kosong", description: "Harap isi judul sebelum menyimpan." });
@@ -109,6 +109,7 @@ export default function NewEssayPage() {
       .map(t => t.trim().toLowerCase())
       .filter(Boolean);
 
+    const now = new Date().toISOString();
     const essayData = {
       title,
       content,
@@ -116,41 +117,40 @@ export default function NewEssayPage() {
       tags: normalizedTags,
       status,
       authorId: user.uid,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
 
-    const essayRef = collection(db, 'essays');
-    
-    // NON-BLOCKING WRITE: Lakukan penyimpanan tanpa menunggu await
-    addDoc(essayRef, essayData)
-      .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: essayRef.path,
-          operation: 'create',
-          requestResourceData: essayData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
+    try {
+      // Menggunakan await agar kita yakin data tersimpan sebelum pindah halaman
+      await addDoc(collection(db, 'essays'), essayData);
+      
+      await addDoc(collection(db, 'activity_logs'), {
+        adminId: user.uid,
+        action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
+        timestamp: now
       });
 
-    addDoc(collection(db, 'activity_logs'), {
-      adminId: user.uid,
-      action: `${status === 'published' ? 'Menerbitkan' : 'Menyimpan draf'} esai: ${title}`,
-      timestamp: new Date().toISOString()
-    }).catch(() => {});
+      localStorage.removeItem('andra_draft_title');
+      localStorage.removeItem('andra_draft_content');
+      localStorage.removeItem('andra_draft_category');
+      localStorage.removeItem('andra_draft_tags');
 
-    // OPTIMISTIC NAVIGATION: Langsung redirect tanpa menunggu server
-    localStorage.removeItem('andra_draft_title');
-    localStorage.removeItem('andra_draft_content');
-    localStorage.removeItem('andra_draft_category');
-    localStorage.removeItem('andra_draft_tags');
-
-    toast({
-      title: status === 'published' ? "Terbit" : "Draf Disimpan",
-      description: `Esai "${title}" sedang diproses di latar belakang.`,
-    });
-    
-    router.push('/admin/AndraNgelantur99/essays');
+      toast({
+        title: status === 'published' ? "Terbit" : "Draf Disimpan",
+        description: `Esai "${title}" berhasil disimpan secara permanen.`,
+      });
+      
+      router.push('/admin/AndraNgelantur99/essays');
+    } catch (error: any) {
+      setSaving(false);
+      const permissionError = new FirestorePermissionError({
+        path: 'essays',
+        operation: 'create',
+        requestResourceData: essayData,
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    }
   };
 
   if (!isInitialized) return null;
@@ -169,13 +169,13 @@ export default function NewEssayPage() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={clearDraft} className="text-muted-foreground hover:text-white">
+          <Button variant="ghost" size="sm" onClick={clearDraft} className="text-muted-foreground hover:text-white" disabled={saving}>
             <RotateCcw className="w-3.5 h-3.5 mr-2" /> Reset
           </Button>
 
           <Sheet open={showMobileTemplate} onOpenChange={setShowMobileTemplate}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="lg:hidden border-border text-[0.6rem] uppercase tracking-widest">
+              <Button variant="outline" size="sm" className="lg:hidden border-border text-[0.6rem] uppercase tracking-widest" disabled={saving}>
                 <ClipboardCheck className="w-3.5 h-3.5 mr-2" /> Panduan
               </Button>
             </SheetTrigger>

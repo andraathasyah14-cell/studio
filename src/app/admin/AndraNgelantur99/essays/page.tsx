@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, query, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { Search, Filter, Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ export default function ContentManagement() {
 
   const essaysQuery = React.useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'essays'), orderBy('updatedAt', 'desc'));
+    return collection(db, 'essays');
   }, [db]);
 
   const { data: essays, loading } = useCollection(essaysQuery);
@@ -114,7 +114,6 @@ export default function ContentManagement() {
                 <th className="px-6 py-4 font-bold text-muted-foreground">Judul</th>
                 <th className="px-6 py-4 font-bold text-muted-foreground">Kategori</th>
                 <th className="px-6 py-4 font-bold text-muted-foreground">Status</th>
-                <th className="px-6 py-4 font-bold text-muted-foreground">Terakhir Diubah</th>
                 <th className="px-6 py-4 font-bold text-muted-foreground text-right">Aksi</th>
               </tr>
             </thead>
@@ -122,12 +121,12 @@ export default function ContentManagement() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={5} className="px-6 py-4 h-16 bg-white/[0.01]" />
+                    <td colSpan={4} className="px-6 py-4 h-16 bg-white/[0.01]" />
                   </tr>
                 ))
               ) : filteredEssays?.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic font-serif lowercase tracking-normal text-sm">
+                  <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic font-serif lowercase tracking-normal text-sm">
                     Tidak ada konten ditemukan.
                   </td>
                 </tr>
@@ -140,9 +139,6 @@ export default function ContentManagement() {
                     <td className="px-6 py-4 text-muted-foreground">{essay.category || '-'}</td>
                     <td className="px-6 py-4">
                       <StatusBadge status={essay.status} />
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {new Date(essay.updatedAt).toLocaleDateString('id-ID')}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
