@@ -11,17 +11,20 @@ export default function Hero() {
   const essaysRef = useMemoFirebase(() => db ? collection(db, 'essays') : null, [db]);
   const papersRef = useMemoFirebase(() => db ? collection(db, 'papers') : null, [db]);
   const refsRef = useMemoFirebase(() => db ? collection(db, 'references') : null, [db]);
+  const logsRef = useMemoFirebase(() => db ? collection(db, 'activity_logs') : null, [db]);
 
   const { data: essays } = useCollection(essaysRef);
   const { data: papers } = useCollection(papersRef);
   const { data: refs } = useCollection(refsRef);
+  const { data: logs } = useCollection(logsRef);
 
   const statsCount = useMemo(() => ({
     essays: essays?.filter(e => e.status === 'published').length || 0,
     papers: papers?.length || 0,
     books: refs?.filter(r => r.category?.toLowerCase() === 'buku').length || 0,
     totalRefs: refs?.length || 0,
-  }), [essays, papers, refs]);
+    totalLogs: logs?.length || 0,
+  }), [essays, papers, refs, logs]);
 
   return (
     <section id="home" className="py-24 px-6 border-b border-border grid grid-cols-1 md:grid-cols-5 gap-16 items-end">
@@ -41,7 +44,7 @@ export default function Hero() {
         <StatRow label="Paper Riset" value={statsCount.papers} />
         <StatRow label="Literatur Buku" value={statsCount.books} />
         <StatRow label="Total Referensi" value={statsCount.totalRefs} />
-        <StatRow label="Log Aktivitas" value={0} />
+        <StatRow label="Log Aktivitas" value={statsCount.totalLogs} />
       </div>
     </section>
   );
